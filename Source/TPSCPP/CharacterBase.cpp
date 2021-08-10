@@ -197,17 +197,45 @@ void ACharacterBase::ReplicateStopCrouching_Implementation()
 
 void ACharacterBase::InputStartFiring()
 {
-	if (IsValid(WeaponCurrent))
-	{
-		WeaponCurrent->StartFiring();
-	}
+	StartFiring();
 }
 
 void ACharacterBase::InputStopFiring()
 {
+	StopFiring();
+}
+
+bool ACharacterBase::StartFiring_Validate()
+{
+	return true;
+}
+
+void ACharacterBase::StartFiring_Implementation()
+{
+	if (IsValid(WeaponCurrent))
+	{
+		WeaponCurrent->StartFiring();
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("WeaponCurrent=nullptr"));
+	}
+}
+
+bool ACharacterBase::StopFiring_Validate()
+{
+	return true;
+}
+
+void ACharacterBase::StopFiring_Implementation()
+{
 	if (!IsValid(WeaponCurrent))
 	{
 		WeaponCurrent->StopFiring();
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("WeaponCurrent=nullptr"));
 	}
 }
 

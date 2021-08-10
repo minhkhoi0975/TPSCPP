@@ -73,6 +73,9 @@ protected:
 
 	// Inputs
 protected:
+
+	// Movements
+
 	void InputMoveForward(float Value);
 	void InputMoveRight(float Value);
 
@@ -81,10 +84,12 @@ protected:
 
 	UFUNCTION(Server, Reliable, WithValidation)
 	void ReplicateStartJumping();
+	bool ReplicateStartJumping_Validate();
 	void ReplicateStartJumping_Implementation();
 
 	UFUNCTION(Server, Reliable, WithValidation)
 	void ReplicateStopJumping();
+	bool ReplicateStopJumping_Validate();
 	void ReplicateStopJumping_Implementation();
 
 	void InputStartCrouching(); 
@@ -96,10 +101,24 @@ protected:
 
 	UFUNCTION(Server, Reliable, WithValidation)
 	void ReplicateStopCrouching();
+	bool ReplicateStopCrouching_Validate();
 	void ReplicateStopCrouching_Implementation();
+
+	// Firing
 
 	void InputStartFiring();
 	void InputStopFiring();
+
+	UFUNCTION(Server, Reliable, WithValidation)
+	void StartFiring();
+	bool StartFiring_Validate();
+	void StartFiring_Implementation();
+
+	UFUNCTION(Server, Reliable, WithValidation)
+	void StopFiring();
+	bool StopFiring_Validate();
+	void StopFiring_Implementation();
+
 
 	// Animation
 protected:
