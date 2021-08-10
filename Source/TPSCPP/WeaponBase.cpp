@@ -23,6 +23,9 @@ AWeaponBase::AWeaponBase()
 
 	// Muzzle
 	Muzzle = CreateAbstractDefaultSubobject<USphereComponent>(TEXT("Muzzle"));
+
+	// Enable replication
+	SetReplicates(true);
 }
 
 // Called when the game starts or when spawned
@@ -38,6 +41,7 @@ void AWeaponBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifet
 
 	DOREPLIFETIME(AWeaponBase, AmmoMagazine);
 	DOREPLIFETIME(AWeaponBase, AmmoInventory);
+	DOREPLIFETIME(AWeaponBase, bFiring);
 }
 
 // Called every frame
@@ -54,6 +58,7 @@ bool AWeaponBase::StartFiring_Validate()
 
 void AWeaponBase::StartFiring_Implementation()
 {
+	bFiring = true;
 	Fire();
 }
 
@@ -64,6 +69,7 @@ bool AWeaponBase::StopFiring_Validate()
 
 void AWeaponBase::StopFiring_Implementation()
 {
+	bFiring = false;
 }
 
 bool AWeaponBase::Fire_Validate()
@@ -91,6 +97,8 @@ void AWeaponBase::Fire_Implementation()
 		StartLocation = CarryingCharacter->Camera->GetComponentLocation();
 		FiringDirection = CarryingCharacter->Camera->GetForwardVector();
 		EndLocation = StartLocation + FiringDirection * 1000000;
+
+		UE_LOG(LogTemp, Warning, TEXT("Shoot from camera."));
 	}
 	// If the gun has no carrying character or is being carried by an NPC, line trace from muzzle.
 	else
@@ -98,6 +106,8 @@ void AWeaponBase::Fire_Implementation()
 		StartLocation = Muzzle->GetComponentLocation();
 		FiringDirection = GetActorForwardVector();
 		EndLocation = StartLocation + FiringDirection * 1000000;
+
+		UE_LOG(LogTemp, Warning, TEXT("Shoot from muzzle."));
 	}
 
 	// When line tracing, ignore the shooter and the gun itself.
@@ -117,10 +127,15 @@ void AWeaponBase::Fire_Implementation()
 		FRotator ImpactRotator = FRotationMatrix::MakeFromX(HitResult.ImpactNormal).Rotator();
 		
 		FTransform ImpactTransform = FTransform(ImpactRotator, ImpactLocation);
-		PlayImpactEffect(ImpactTransform);
+		PlayEffect(EffectImpact, ImpactTransform);
 	}
 
+	// Play shooting sound.
 	PlayShootingSound();
+
+	// Play muzzle flash effect.
+	FTransform MuzzleFlashTransform = GunMesh->GetSocketTransform("Muzzle");
+	PlayEffect(EffectMuzzleFlash, MuzzleFlashTransform, Muzzle);
 }
 
 bool AWeaponBase::IsGunOutOfAmmo()
@@ -140,18 +155,42 @@ void AWeaponBase::PlayShootingSound_Implementation()
 	{
 		UGameplayStatics::PlaySoundAtLocation(this, SoundFire, GetActorLocation());
 	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("The sound is nullptr."));
+	}
 }
 
-bool AWeaponBase::PlayImpactEffect_Validate(const FTransform& SpawnTransform)
+bool AWeaponBase::PlayEffect_Validate(UParticleSystem* ParticleEffect, const FTransform& SpawnTransform, USceneComponent* AttachToComponent)
 {
 	return true;
 }
 
-void AWeaponBase::PlayImpactEffect_Implementation(const FTransform& SpawnTransform)
+void AWeaponBase::PlayEffect_Implementation(UParticleSystem* ParticleEffect, const FTransform& SpawnTransform, USceneComponent* AttachToComponent)
 {
 	if (EffectImpact)
 	{
-		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), EffectImpact, SpawnTransform);
+		if (AttachToComponent)
+		{
+			UGameplayStatics::SpawnEmitterAttached
+			(
+				ParticleEffect, 
+				AttachToComponent, 
+				FName("None"), 
+				SpawnTransform.GetLocation(), 
+				SpawnTransform.Rotator(), 
+				SpawnTransform.GetScale3D(), 
+				EAttachLocation::Type::KeepWorldPosition
+			);
+		}
+		else
+		{
+			UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ParticleEffect, SpawnTransform);
+		}
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("The effect is nullptr."));
 	}
 }
 

@@ -42,12 +42,16 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
 	class USoundCue* SoundFire;
 
+	/**Muzzle flash effect.*/
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ParticleSystem")
+	class UParticleSystem* EffectMuzzleFlash;
+
 	/**Impact effect.*/
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ParticleSystem")
 	class UParticleSystem* EffectImpact;
 
 	/**Is this weapon firing?*/
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Status")
+	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadWrite, Category = "Status")
 	bool bFiring = false;
 
 protected:
@@ -63,10 +67,12 @@ public:
 public:
 	UFUNCTION(BlueprintCallable, Server, Reliable, WithValidation)
 	void StartFiring();
+	bool StartFiring_Validate();
 	void StartFiring_Implementation();
 
 	UFUNCTION(BlueprintCallable, Server, Reliable, WithValidation)
 	void StopFiring();
+	bool StopFiring_Validate();
 	void StopFiring_Implementation();
 
 	UFUNCTION(BlueprintCallable, Server, Reliable, WithValidation)
@@ -83,7 +89,7 @@ public:
 	void PlayShootingSound_Implementation();
 
 	UFUNCTION(BlueprintCallable, NetMulticast, Reliable, WithValidation)
-	void PlayImpactEffect(const FTransform& SpawnTransform);
-	bool PlayImpactEffect_Validate(const FTransform& SpawnTransform);
-	void PlayImpactEffect_Implementation(const FTransform& SpawnTransform);
+	void PlayEffect(UParticleSystem* ParticleEffect, const FTransform& SpawnTransform, USceneComponent* AttachToComponent = nullptr);
+	bool PlayEffect_Validate(UParticleSystem* ParticleEffect, const FTransform& SpawnTransform, USceneComponent* AttachToComponent = nullptr);
+	void PlayEffect_Implementation(UParticleSystem* ParticleEffect, const FTransform& SpawnTransform, USceneComponent* AttachToComponent = nullptr);
 };
