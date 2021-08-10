@@ -14,11 +14,11 @@ class TPSCPP_API ACharacterBase : public ACharacter, public IAISightTargetInterf
 
 public:
 	/** The capsule of the character.*/
-	UPROPERTY(VisibleDefaultsOnly, Category=Mesh)
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category=Mesh)
 	class UCapsuleComponent* CharacterCapsuleComponent;
 
     /** The mesh of the character.*/
-	UPROPERTY(VisibleDefaultsOnly, Category=Mesh)
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category=Mesh)
 	class USkeletalMeshComponent* CharacterMeshComponent;
 
 	/** Spring arm and camera.*/
@@ -26,6 +26,10 @@ public:
 	class USpringArmComponent* SpringArm;
 	UPROPERTY(VisibleAnywhere, Category=Camera)
 	class UCameraComponent* Camera;
+
+	/**A collision sphere used for hiding the character mesh when the camera clips the collision capsule.*/
+	UPROPERTY(VisibleAnywhere, Category = Camera)
+	class USphereComponent* MeshVisibility;
 
 	/** AI*/
 	UPROPERTY(VisibleDefaultsOnly, Category = AI)
@@ -37,16 +41,22 @@ public:
 	ACharacterBase();
 
 public:	
-	/** Health*/
+	/** Maximum amount of health this character can have.*/
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Health")
-	float HealthMax;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Health")
-	float HealthCurrent;
+	float HealthMax = 100;
+	/** Current amount of health. If it goes below 0, this character dies.*/
+	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadWrite, Category = "Health")
+	float HealthCurrent = HealthMax;
 
-	/** Input status*/
+	/** Current weapon the character is holding on its hand.*/
+	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite, Category = "Weapon")
+	class AWeaponBase* WeaponCurrent;
+
+	/** Is the jump button down?*/
 	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadWrite, Category = "InputStatus")
 	bool bJumpButtonDown = false;
 
+	/** Is the crouch button down?*/
 	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadWrite, Category = "InputStatus")
 	bool bCrouchButtonDown = false;
 
@@ -88,9 +98,18 @@ protected:
 	void ReplicateStopCrouching();
 	void ReplicateStopCrouching_Implementation();
 
+	void InputStartFiring();
+	void InputStopFiring();
+
 	// Animation
 protected:
 	void ReplicateControlRotation();
+
+	// Mesh Visibility Overlap Events
+	UFUNCTION()
+	void OnMeshVisibilityBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+	UFUNCTION()
+	void OnMeshVisibilityEndOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 
 public:	
 	// Called every frame

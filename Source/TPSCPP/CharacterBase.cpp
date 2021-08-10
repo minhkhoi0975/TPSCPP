@@ -2,9 +2,11 @@
 
 
 #include "CharacterBase.h"
+#include "WeaponBase.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "GameFramework/SpringArmComponent.h"
+#include "Components/SphereComponent.h"
 #include "Components/InputComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Camera/CameraComponent.h"
@@ -24,6 +26,7 @@ ACharacterBase::ACharacterBase(): Super()
 	// Capsule Component
 	CharacterCapsuleComponent = GetCapsuleComponent();
 	CharacterCapsuleComponent->InitCapsuleSize(34.0f, 88.0f);
+	CharacterCapsuleComponent->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Overlap);
 
 	// Skeletal Mesh
 	CharacterMeshComponent = GetMesh();
@@ -33,14 +36,21 @@ ACharacterBase::ACharacterBase(): Super()
 	// Spring arm
 	SpringArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArm"));
 	SpringArm->SetupAttachment(CharacterCapsuleComponent);
-	SpringArm->RelativeLocation = FVector(0.0f, 0.0f, 70.0f);
-	SpringArm->TargetArmLength = 300.0f;
+	SpringArm->RelativeLocation = FVector(0.0f, 0.0f, 60.0f);
+	SpringArm->TargetArmLength = 100.0f;
+	SpringArm->SocketOffset = FVector(0, 50.0f, 10.0f);
 	SpringArm->bUsePawnControlRotation = true;
 
 	// Camera
 	Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
 	Camera->SetupAttachment(SpringArm, USpringArmComponent::SocketName);
 	Camera->bUsePawnControlRotation = false;
+
+	// Mesh visibility
+	MeshVisibility = CreateDefaultSubobject<USphereComponent>(TEXT("MeshVisibility"));
+	MeshVisibility->SetupAttachment(Camera);
+	MeshVisibility->RelativeLocation = FVector(-6.85f, 0.0f, 0.0f);
+	MeshVisibility->SetSphereRadius(12.0f);
 
 	// Configure AI Perception Stimuli Source
 	AIPerceptionStimuliSource = CreateDefaultSubobject<UAIPerceptionStimuliSourceComponent>(TEXT("AI_StimuliSource"));
@@ -60,6 +70,10 @@ ACharacterBase::ACharacterBase(): Super()
 void ACharacterBase::BeginPlay()
 {
 	Super::BeginPlay();
+
+	// Bind overlap events to MeshVisibility.
+	MeshVisibility->OnComponentBeginOverlap.AddDynamic(this, &ACharacterBase::OnMeshVisibilityBeginOverlap);
+	MeshVisibility->OnComponentEndOverlap.AddDynamic(this, &ACharacterBase::OnMeshVisibilityEndOverlap);
 	
 	// Enable crouching
 	GetCharacterMovement()->GetNavAgentPropertiesRef().bCanCrouch = true;
@@ -68,6 +82,9 @@ void ACharacterBase::BeginPlay()
 void ACharacterBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(ACharacterBase, HealthCurrent);
+	DOREPLIFETIME(ACharacterBase, WeaponCurrent);
 
 	DOREPLIFETIME(ACharacterBase, bJumpButtonDown);
 	DOREPLIFETIME(ACharacterBase, bCrouchButtonDown);
@@ -178,6 +195,22 @@ void ACharacterBase::ReplicateStopCrouching_Implementation()
 	bCrouchButtonDown = false;
 }
 
+void ACharacterBase::InputStartFiring()
+{
+	if (IsValid(WeaponCurrent))
+	{
+		WeaponCurrent->StartFiring();
+	}
+}
+
+void ACharacterBase::InputStopFiring()
+{
+	if (!IsValid(WeaponCurrent))
+	{
+		WeaponCurrent->StopFiring();
+	}
+}
+
 void ACharacterBase::ReplicateControlRotation()
 {
 	if (HasAuthority() || IsLocallyControlled())
@@ -188,6 +221,27 @@ void ACharacterBase::ReplicateControlRotation()
 			ControlRotation = Controller->GetControlRotation();
 		}
 	}
+}
+
+void ACharacterBase::OnMeshVisibilityBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	if (OtherComp == CharacterCapsuleComponent)
+	{
+		CharacterMeshComponent->SetOwnerNoSee(true);
+		CharacterMeshComponent->bCastHiddenShadow = true;
+	}
+
+	UE_LOG(LogTemp, Display, TEXT("Begin overlap"));
+}
+
+void ACharacterBase::OnMeshVisibilityEndOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
+{
+	if (OtherComp == CharacterCapsuleComponent)
+	{
+		CharacterMeshComponent->SetOwnerNoSee(false);
+	}
+
+	UE_LOG(LogTemp, Display, TEXT("End overlap"));
 }
 
 // Called every frame
@@ -214,6 +268,9 @@ void ACharacterBase::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 
 	PlayerInputComponent->BindAction("Crouch", IE_Pressed, this, &ACharacterBase::InputStartCrouching);
 	PlayerInputComponent->BindAction("Crouch", IE_Released, this, &ACharacterBase::InputStopCrouching);
+
+	PlayerInputComponent->BindAction("Fire", IE_Pressed, this, &ACharacterBase::InputStartFiring);
+	PlayerInputComponent->BindAction("Fire", IE_Released, this, &ACharacterBase::InputStopFiring);
 }
 
 bool ACharacterBase::CanBeSeenFrom(const FVector& ObserverLocation, FVector& OutSeenLocation, int32& NumberOfLoSChecksPerformed, float& OutSightStrength, const AActor* IgnoreActor) const
