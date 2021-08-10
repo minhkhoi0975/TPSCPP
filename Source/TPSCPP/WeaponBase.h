@@ -38,6 +38,14 @@ public:
 	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadWrite, Category = "Ammo")
 	int AmmoInventory = AmmoMax - AmmoMagazineMax;
 
+	/**Firing sound.*/
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
+	class USoundCue* SoundFire;
+
+	/**Impact effect.*/
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ParticleSystem")
+	class UParticleSystem* EffectImpact;
+
 	/**Is this weapon firing?*/
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Status")
 	bool bFiring = false;
@@ -61,10 +69,21 @@ public:
 	void StopFiring();
 	void StopFiring_Implementation();
 
-	UFUNCTION(BlueprintNativeEvent)
+	UFUNCTION(BlueprintCallable, Server, Reliable, WithValidation)
 	void Fire();
+	bool Fire_Validate();
 	void Fire_Implementation();
 
 	UFUNCTION(BlueprintCallable)
 	bool IsGunOutOfAmmo();
+
+	UFUNCTION(BlueprintCallable, NetMulticast, Reliable, WithValidation)
+	void PlayShootingSound();
+	bool PlayShootingSound_Validate();
+	void PlayShootingSound_Implementation();
+
+	UFUNCTION(BlueprintCallable, NetMulticast, Reliable, WithValidation)
+	void PlayImpactEffect(const FTransform& SpawnTransform);
+	bool PlayImpactEffect_Validate(const FTransform& SpawnTransform);
+	void PlayImpactEffect_Implementation(const FTransform& SpawnTransform);
 };
