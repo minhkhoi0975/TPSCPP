@@ -9,6 +9,7 @@
 #include "Sound/SoundCue.h"
 #include "Particles/ParticleSystem.h"
 #include "Kismet/GameplayStatics.h"
+#include "Kismet/KismetMathLibrary.h"
 #include "Net/UnrealNetwork.h"
 #include "DrawDebugHelpers.h"
 
@@ -94,8 +95,14 @@ void AWeaponBase::Fire_Implementation()
 	// If the gun is being carried by a player character, line trace from camera.
 	if (IsValid(CarryingCharacter) && Cast<APlayerController>(CarryingCharacter->GetController()))
 	{
+		// Find the starting point of line trace.
 		StartLocation = CarryingCharacter->Camera->GetComponentLocation();
+
+		// Get forward vector and "bend" it to become firing direction.
 		FiringDirection = CarryingCharacter->Camera->GetForwardVector();
+		FiringDirection = UKismetMathLibrary::RandomUnitVectorInConeInRadians(FiringDirection, BulletSpreadAngleRad);
+
+		// Find end point.
 		EndLocation = StartLocation + FiringDirection * 1000000;
 
 		UE_LOG(LogTemp, Warning, TEXT("Shoot from camera."));
@@ -103,8 +110,14 @@ void AWeaponBase::Fire_Implementation()
 	// If the gun has no carrying character or is being carried by an NPC, line trace from muzzle.
 	else
 	{
+		// Find the starting point of line trace.
 		StartLocation = Muzzle->GetComponentLocation();
+
+		// Get forward vector and "bend" it to become firing direction.
 		FiringDirection = GetActorForwardVector();
+		FiringDirection = UKismetMathLibrary::RandomUnitVectorInConeInRadians(FiringDirection, BulletSpreadAngleRad);
+
+		// Find end point.
 		EndLocation = StartLocation + FiringDirection * 1000000;
 
 		UE_LOG(LogTemp, Warning, TEXT("Shoot from muzzle."));
@@ -117,7 +130,7 @@ void AWeaponBase::Fire_Implementation()
 
 	// Line trace.
 	FHitResult HitResult;
-	bool Hit = GetWorld()->LineTraceSingleByChannel(HitResult, StartLocation, EndLocation, ECollisionChannel::ECC_Visibility, CollisionQuerryParams);
+	bool Hit = GetWorld()->LineTraceSingleByChannel(HitResult, StartLocation, EndLocation, ECollisionChannel::ECC_Camera, CollisionQuerryParams);
 	DrawDebugLine(GetWorld(), StartLocation, EndLocation, FColor::Red, false, 5.0f);
 	if (Hit)
 	{

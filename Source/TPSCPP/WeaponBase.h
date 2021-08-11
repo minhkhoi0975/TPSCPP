@@ -38,6 +38,10 @@ public:
 	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadWrite, Category = "Ammo")
 	int AmmoInventory = AmmoMax - AmmoMagazineMax;
 
+	/**The angle between the forward vector (along which the bullet is supposed to travel) and the real vector (along which the bullet really travels).*/
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Accuracy")
+	float BulletSpreadAngleRad = 0.0f;
+
 	/**Firing sound.*/
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
 	class USoundCue* SoundFire;
