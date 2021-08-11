@@ -74,57 +74,60 @@ protected:
 
 	// Inputs
 protected:
-
 	// Movements
-
 	void InputMoveForward(float Value);
 	void InputMoveRight(float Value);
 
 	void InputStartJumping();
 	void InputStopJumping();
 
-	UFUNCTION(Server, Reliable, WithValidation)
-	void ReplicateStartJumping();
-	bool ReplicateStartJumping_Validate();
-	void ReplicateStartJumping_Implementation();
-
-	UFUNCTION(Server, Reliable, WithValidation)
-	void ReplicateStopJumping();
-	bool ReplicateStopJumping_Validate();
-	void ReplicateStopJumping_Implementation();
-
 	void InputStartCrouching(); 
 	void InputStopCrouching();
 
-	UFUNCTION(Server, Reliable, WithValidation)
-	void ReplicateStartCrouching();
-	void ReplicateStartCrouching_Implementation();
-
-	UFUNCTION(Server, Reliable, WithValidation)
-	void ReplicateStopCrouching();
-	bool ReplicateStopCrouching_Validate();
-	void ReplicateStopCrouching_Implementation();
-
 	// Firing
-
 	void InputStartFiring();
 	void InputStopFiring();
 
+public:
 	UFUNCTION(Server, Reliable, WithValidation)
 	void StartFiring();
 	bool StartFiring_Validate();
-	void StartFiring_Implementation();
+	virtual void StartFiring_Implementation();
 
 	UFUNCTION(Server, Reliable, WithValidation)
 	void StopFiring();
 	bool StopFiring_Validate();
-	void StopFiring_Implementation();
+	virtual void StopFiring_Implementation();
 
-
-	// Animation
-protected:
+	// Animation Replication
+public:
 	void ReplicateControlRotation();
 
+	UFUNCTION(BlueprintCallable, Server, Reliable, WithValidation)
+	void ReplicateStartJumping();
+	bool ReplicateStartJumping_Validate();
+	void ReplicateStartJumping_Implementation();
+
+	UFUNCTION(BlueprintCallable, Server, Reliable, WithValidation)
+	void ReplicateStopJumping();
+	bool ReplicateStopJumping_Validate();
+	void ReplicateStopJumping_Implementation();
+
+	UFUNCTION(BlueprintCallable, Server, Reliable, WithValidation)
+	void ReplicateStartCrouching();
+	void ReplicateStartCrouching_Implementation();
+
+	UFUNCTION(BlueprintCallable, Server, Reliable, WithValidation)
+	void ReplicateStopCrouching();
+	bool ReplicateStopCrouching_Validate();
+	void ReplicateStopCrouching_Implementation();
+
+	UFUNCTION(BlueprintCallable, Client, Reliable, WithValidation)
+	void ApplyRecoil(float Val);
+	bool ApplyRecoil_Validate(float Val);
+	void ApplyRecoil_Implementation(float Val);
+
+protected:
 	// Mesh Visibility Overlap Events
 	UFUNCTION()
 	void OnMeshVisibilityBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);

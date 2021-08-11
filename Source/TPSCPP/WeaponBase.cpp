@@ -99,7 +99,8 @@ void AWeaponBase::ApplyRecoil_Implementation()
 		ACharacterBase* CarryingCharacter = Cast<ACharacterBase>(Instigator);
 		if (IsValid(CarryingCharacter))
 		{
-			CarryingCharacter->AddControllerPitchInput(RecoilTimeline.GetPlaybackPosition() * RecoilInNegative);
+			//CarryingCharacter->AddControllerPitchInput(RecoilTimeline.GetPlaybackPosition() * RecoilInNegative);
+			CarryingCharacter->ApplyRecoil(RecoilTimeline.GetPlaybackPosition() * RecoilInNegative);
 		}
 	}
 
@@ -173,7 +174,7 @@ void AWeaponBase::Fire_Implementation()
 
 	// Line trace.
 	FHitResult HitResult;
-	bool Hit = GetWorld()->LineTraceSingleByChannel(HitResult, StartLocation, EndLocation, ECollisionChannel::ECC_Camera, CollisionQuerryParams);
+	bool Hit = GetWorld()->LineTraceSingleByChannel(HitResult, StartLocation, EndLocation, ECollisionChannel::ECC_Visibility, CollisionQuerryParams);
 	DrawDebugLine(GetWorld(), StartLocation, EndLocation, FColor::Red, false, 5.0f);
 	if (Hit)
 	{

@@ -26,12 +26,15 @@ ACharacterBase::ACharacterBase(): Super()
 	// Capsule Component
 	CharacterCapsuleComponent = GetCapsuleComponent();
 	CharacterCapsuleComponent->InitCapsuleSize(34.0f, 88.0f);
+	CharacterCapsuleComponent->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Block);
 	CharacterCapsuleComponent->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Block);
 
 	// Skeletal Mesh
 	CharacterMeshComponent = GetMesh();
 	CharacterMeshComponent->RelativeLocation = FVector(0.0f, 0.0f, -90.0f);
 	CharacterMeshComponent->RelativeRotation = FRotator(0.0f, -90.0f, 0.0f);
+	CharacterMeshComponent->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Block);
+	CharacterMeshComponent->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Block);
 
 	// Spring arm
 	SpringArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArm"));
@@ -110,6 +113,7 @@ void ACharacterBase::InputMoveRight(float Value)
 void ACharacterBase::InputStartJumping()
 {
 	Jump();
+	bJumpButtonDown = CanJump();
 	ReplicateStartJumping();
 
 	UCharacterMovementComponent* MovementComponent = Cast<UCharacterMovementComponent>(GetMovementComponent());
@@ -129,6 +133,7 @@ void ACharacterBase::InputStartJumping()
 void ACharacterBase::InputStopJumping()
 {
 	StopJumping();
+	bJumpButtonDown = false;
 	ReplicateStopJumping();
 
 	UCharacterMovementComponent* MovementComponent = Cast<UCharacterMovementComponent>(GetMovementComponent());
@@ -168,12 +173,14 @@ void ACharacterBase::ReplicateStopJumping_Implementation()
 void ACharacterBase::InputStartCrouching()
 {
 	Crouch();
+	bCrouchButtonDown = true;
 	ReplicateStartCrouching();
 }
 
 void ACharacterBase::InputStopCrouching()
 {
 	UnCrouch();
+	bCrouchButtonDown = false;
 	ReplicateStopCrouching();
 }
 
@@ -193,6 +200,16 @@ bool ACharacterBase::ReplicateStopCrouching_Validate()
 void ACharacterBase::ReplicateStopCrouching_Implementation()
 {
 	bCrouchButtonDown = false;
+}
+
+bool ACharacterBase::ApplyRecoil_Validate(float Val)
+{
+	return true;
+}
+
+void ACharacterBase::ApplyRecoil_Implementation(float Val)
+{
+	AddControllerPitchInput(Val);
 }
 
 void ACharacterBase::InputStartFiring()
