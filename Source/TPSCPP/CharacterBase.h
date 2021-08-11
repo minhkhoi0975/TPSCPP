@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "Perception/AISightTargetInterface.h"
+#include "Components/TimelineComponent.h"
 #include "CharacterBase.generated.h"
 
 UCLASS(Blueprintable)
