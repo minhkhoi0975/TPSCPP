@@ -44,7 +44,7 @@ void AWeaponBase::BeginPlay()
 		RecoilTimelineCallback.BindUFunction(this, FName("TimelineRecoil_Update"));
 
 		RecoilTimeline.AddInterpFloat(RecoilCurve, RecoilTimelineCallback);
-		UE_LOG(LogTemp, Display, TEXT("Recoil timeline is set."));
+		// UE_LOG(LogTemp, Display, TEXT("Recoil timeline is set."));
 	}
 	else
 	{
@@ -100,7 +100,7 @@ void AWeaponBase::ApplyRecoil_Implementation()
 		if (IsValid(CarryingCharacter))
 		{
 			//CarryingCharacter->AddControllerPitchInput(RecoilTimeline.GetPlaybackPosition() * RecoilInNegative);
-			CarryingCharacter->ApplyRecoil(RecoilTimeline.GetPlaybackPosition() * RecoilInNegative);
+			CarryingCharacter->ApplyRecoil(RecoilTimeline.GetPlaybackPosition() * RecoilScale);
 		}
 	}
 
@@ -187,8 +187,17 @@ void AWeaponBase::Fire_Implementation()
 		PlayEffect(EffectImpact, ImpactTransform);
 	}
 
-	// Recoil.
+	// Recoil and camera shake.
 	RecoilTimeline.PlayFromStart();
+	if (IsValid(CarryingCharacter))
+	{
+		APlayerController* PlayerController = Cast<APlayerController>(CarryingCharacter->GetController());
+		if (IsValid(PlayerController) && IsValid(CameraShakeClass))
+		{
+			PlayerController->ClientPlayCameraShake(CameraShakeClass, CameraShakeScale);
+		}
+	}
+
 
 	// Play shooting sound.
 	PlayShootingSound();

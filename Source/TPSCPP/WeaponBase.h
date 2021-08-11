@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "Components/TimelineComponent.h"
+#include "Camera/CameraShake.h"
 #include "WeaponBase.generated.h"
 
 UCLASS()
@@ -43,17 +44,24 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Accuracy")
 	float BulletSpreadAngleRad;
 
-	/**How much the camera moves up.*/
+	/**How much the camera moves up. Must be negative to work properly.*/
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Accuracy")
-	float RecoilInNegative;
+	float RecoilScale;
 
 	/**The recoil curve.*/
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Accuracy")
 	class UCurveFloat* RecoilCurve;
 
 	/**Recoil timeline*/
-	//UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Accuracy")
 	FTimeline RecoilTimeline;
+
+	/**Camera shake scale.*/
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Accuracy")
+	float CameraShakeScale = 1.0f;
+
+	/**Camera shake class.*/
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Accuracy")
+	TSubclassOf<UCameraShake> CameraShakeClass = TSubclassOf<UCameraShake>();
 
 	/**Firing sound.*/
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
