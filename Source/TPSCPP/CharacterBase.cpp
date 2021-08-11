@@ -26,7 +26,7 @@ ACharacterBase::ACharacterBase(): Super()
 	// Capsule Component
 	CharacterCapsuleComponent = GetCapsuleComponent();
 	CharacterCapsuleComponent->InitCapsuleSize(34.0f, 88.0f);
-	CharacterCapsuleComponent->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Overlap);
+	CharacterCapsuleComponent->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Block);
 
 	// Skeletal Mesh
 	CharacterMeshComponent = GetMesh();
