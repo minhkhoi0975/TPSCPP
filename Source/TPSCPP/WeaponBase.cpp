@@ -3,14 +3,17 @@
 
 #include "WeaponBase.h"
 #include "CharacterBase.h"
+#include "UObject/ConstructorHelpers.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "Components/SphereComponent.h"
+#include "Components/TimelineComponent.h"
 #include "Camera/CameraComponent.h"
 #include "Sound/SoundCue.h"
 #include "Particles/ParticleSystem.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Net/UnrealNetwork.h"
+#include "Curves/CurveFloat.h"
 #include "DrawDebugHelpers.h"
 
 // Sets default values
@@ -33,7 +36,20 @@ AWeaponBase::AWeaponBase()
 void AWeaponBase::BeginPlay()
 {
 	Super::BeginPlay();
-	
+
+	// Recoil Timeline
+	if (IsValid(RecoilCurve))
+	{
+		FOnTimelineFloat RecoilTimelineCallback;
+		RecoilTimelineCallback.BindUFunction(this, FName("TimelineRecoil_Update"));
+
+		RecoilTimeline.AddInterpFloat(RecoilCurve, RecoilTimelineCallback);
+		UE_LOG(LogTemp, Display, TEXT("Recoil timeline is set."));
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("This weapon has no recoil curve."));
+	}
 }
 
 void AWeaponBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -50,6 +66,12 @@ void AWeaponBase::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	RecoilTimeline.TickTimeline(DeltaTime);
+}
+
+void AWeaponBase::TimelineRecoil_Update()
+{
+	ApplyRecoil();
 }
 
 bool AWeaponBase::StartFiring_Validate()
@@ -61,6 +83,27 @@ void AWeaponBase::StartFiring_Implementation()
 {
 	bFiring = true;
 	Fire();
+}
+
+bool AWeaponBase::ApplyRecoil_Validate()
+{
+	return true;
+}
+
+void AWeaponBase::ApplyRecoil_Implementation()
+{
+	AActor* Instigator = GetInstigator();
+
+	if (IsValid(Instigator))
+	{
+		ACharacterBase* CarryingCharacter = Cast<ACharacterBase>(Instigator);
+		if (IsValid(CarryingCharacter))
+		{
+			CarryingCharacter->AddControllerPitchInput(RecoilTimeline.GetPlaybackPosition() * RecoilInNegative);
+		}
+	}
+
+	UE_LOG(LogTemp, Display, TEXT("Recoil"));
 }
 
 bool AWeaponBase::StopFiring_Validate()
@@ -105,7 +148,7 @@ void AWeaponBase::Fire_Implementation()
 		// Find end point.
 		EndLocation = StartLocation + FiringDirection * 1000000;
 
-		UE_LOG(LogTemp, Warning, TEXT("Shoot from camera."));
+		UE_LOG(LogTemp, Display, TEXT("Shoot from camera."));
 	}
 	// If the gun has no carrying character or is being carried by an NPC, line trace from muzzle.
 	else
@@ -120,7 +163,7 @@ void AWeaponBase::Fire_Implementation()
 		// Find end point.
 		EndLocation = StartLocation + FiringDirection * 1000000;
 
-		UE_LOG(LogTemp, Warning, TEXT("Shoot from muzzle."));
+		UE_LOG(LogTemp, Display, TEXT("Shoot from muzzle."));
 	}
 
 	// When line tracing, ignore the shooter and the gun itself.
@@ -142,6 +185,9 @@ void AWeaponBase::Fire_Implementation()
 		FTransform ImpactTransform = FTransform(ImpactRotator, ImpactLocation);
 		PlayEffect(EffectImpact, ImpactTransform);
 	}
+
+	// Recoil.
+	RecoilTimeline.PlayFromStart();
 
 	// Play shooting sound.
 	PlayShootingSound();

@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "Components/TimelineComponent.h"
 #include "WeaponBase.generated.h"
 
 UCLASS()
@@ -40,7 +41,19 @@ public:
 
 	/**The angle between the forward vector (along which the bullet is supposed to travel) and the real vector (along which the bullet really travels).*/
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Accuracy")
-	float BulletSpreadAngleRad = 0.0f;
+	float BulletSpreadAngleRad;
+
+	/**How much the camera moves up.*/
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Accuracy")
+	float RecoilInNegative;
+
+	/**The recoil curve.*/
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Accuracy")
+	class UCurveFloat* RecoilCurve;
+
+	/**Recoil timeline*/
+	//UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Accuracy")
+	FTimeline RecoilTimeline;
 
 	/**Firing sound.*/
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
@@ -68,11 +81,20 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
+	// Timeline for gun recoil.
+	UFUNCTION()
+	void TimelineRecoil_Update();
+
 public:
 	UFUNCTION(BlueprintCallable, Server, Reliable, WithValidation)
 	void StartFiring();
 	bool StartFiring_Validate();
 	void StartFiring_Implementation();
+
+	UFUNCTION(BlueprintCallable, Server, Reliable, WithValidation)
+	void ApplyRecoil();
+	bool ApplyRecoil_Validate();
+	void ApplyRecoil_Implementation();
 
 	UFUNCTION(BlueprintCallable, Server, Reliable, WithValidation)
 	void StopFiring();
