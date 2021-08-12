@@ -8,6 +8,7 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "Components/SphereComponent.h"
 #include "Components/InputComponent.h"
+#include "Animation/AnimBlueprint.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Camera/CameraComponent.h"
 #include "Perception/AIPerceptionStimuliSourceComponent.h"
@@ -15,6 +16,7 @@
 #include "Perception/AISense_Hearing.h"
 #include "CharacterAIController.h"
 #include "Engine/World.h"
+#include "UObject/ConstructorHelpers.h"
 #include "Net/UnrealNetwork.h"
 
 // Sets default values
@@ -35,6 +37,28 @@ ACharacterBase::ACharacterBase(): Super()
 	CharacterMeshComponent->RelativeRotation = FRotator(0.0f, -90.0f, 0.0f);
 	CharacterMeshComponent->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Block);
 	CharacterMeshComponent->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Block);
+
+	// Set mesh and animation for CharacterMeshComponent
+	static ConstructorHelpers::FObjectFinder<USkeletalMesh> CharacterMesh(TEXT("/Game/AnimStarterPack/UE4_Mannequin/Mesh/SK_Mannequin"));
+	if (CharacterMesh.Succeeded())
+	{
+		CharacterMeshComponent->SetSkeletalMesh(CharacterMesh.Object);
+
+		static ConstructorHelpers::FObjectFinder<UAnimBlueprint> AnimBlueprint(TEXT("/Game/MyAssets/Characters/AnimationBlueprint/CharacterAnimationBlueprint"));
+		if (AnimBlueprint.Succeeded())
+		{
+			CharacterMeshComponent->SetAnimationMode(EAnimationMode::AnimationBlueprint);
+			//CharacterMeshComponent->SetAnimInstanceClass(AnimBlueprint.Object->StaticClass());
+		}
+		else
+		{
+			UE_LOG(LogTemp, Error, TEXT("Cannot find /Game/MyAssets/Characters/AnimationBlueprint/CharacterAnimationBlueprint"));
+		}
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("/Game/AnimStarterPack/UE4_Mannequin/Mesh/SK_Mannequin"));
+	}
 
 	// Spring arm
 	SpringArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArm"));
@@ -225,6 +249,13 @@ void ACharacterBase::ReplicateAnimMontage_Implementation(UAnimMontage* AnimMonta
 void ACharacterBase::InputStartFiring()
 {
 	StartFiring();
+
+	if (IsValid(WeaponCurrent))
+	{
+		FString AmmoMagazineString = FString::FromInt(WeaponCurrent->AmmoMagazine);
+		FString AmmoInventoryString = FString::FromInt(WeaponCurrent->AmmoInventory);
+		UE_LOG(LogTemp, Display, TEXT("%s/%s"), *AmmoMagazineString, *AmmoInventoryString);
+	}
 }
 
 void ACharacterBase::InputStopFiring()
