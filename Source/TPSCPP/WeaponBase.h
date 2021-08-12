@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "Components/TimelineComponent.h"
+#include "Animation/AnimMontage.h"
 #include "Camera/CameraShake.h"
 #include "WeaponBase.generated.h"
 
@@ -39,6 +40,10 @@ public:
 	/**The number of bullets in player's inventory (not in the gun).*/
 	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadWrite, Category = "Ammo")
 	int AmmoInventory = AmmoMax - AmmoMagazineMax;
+
+	/**The number of bullets fired in each shot.*/
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ammo")
+	int AmmoPerShot = 1;
 
 	/**The angle between the forward vector (along which the bullet is supposed to travel) and the real vector (along which the bullet really travels).*/
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Accuracy")
@@ -79,6 +84,10 @@ public:
 	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadWrite, Category = "Status")
 	bool bFiring = false;
 
+	/**Impact effect.*/
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
+	UAnimMontage* AnimMontageReload;
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -97,7 +106,7 @@ public:
 	UFUNCTION(BlueprintCallable, Server, Reliable, WithValidation)
 	void StartFiring();
 	bool StartFiring_Validate();
-	void StartFiring_Implementation();
+	virtual void StartFiring_Implementation();
 
 	UFUNCTION(BlueprintCallable, Server, Reliable, WithValidation)
 	void ApplyRecoil();
@@ -107,15 +116,29 @@ public:
 	UFUNCTION(BlueprintCallable, Server, Reliable, WithValidation)
 	void StopFiring();
 	bool StopFiring_Validate();
-	void StopFiring_Implementation();
+	virtual void StopFiring_Implementation();
 
+	/**Fire a bullet.*/
 	UFUNCTION(BlueprintCallable, Server, Reliable, WithValidation)
 	void Fire();
 	bool Fire_Validate();
-	void Fire_Implementation();
+	virtual void Fire_Implementation();
 
+	/**Reduce ammo after a shot.*/
+	UFUNCTION(BlueprintCallable)
+	void ReduceAmmo();
+
+	/**Check if the magazine in the gun runs out of ammo.*/
 	UFUNCTION(BlueprintCallable)
 	bool IsGunOutOfAmmo();
+
+	UFUNCTION(BlueprintCallable, Server, Reliable, WithValidation)
+	void Reload();
+	bool Reload_Validate();
+	virtual void Reload_Implementation();
+
+	/**Check if this weapon can reload.*/
+	bool CanReload();
 
 	UFUNCTION(BlueprintCallable, NetMulticast, Reliable, WithValidation)
 	void PlayShootingSound();

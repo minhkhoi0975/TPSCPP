@@ -6,6 +6,7 @@
 #include "GameFramework/Character.h"
 #include "Perception/AISightTargetInterface.h"
 #include "Components/TimelineComponent.h"
+#include "Animation/AnimMontage.h"
 #include "CharacterBase.generated.h"
 
 UCLASS(Blueprintable)
@@ -88,6 +89,9 @@ protected:
 	void InputStartFiring();
 	void InputStopFiring();
 
+	// Reload
+	void InputReload();
+
 public:
 	UFUNCTION(Server, Reliable, WithValidation)
 	void StartFiring();
@@ -98,6 +102,11 @@ public:
 	void StopFiring();
 	bool StopFiring_Validate();
 	virtual void StopFiring_Implementation();
+
+	UFUNCTION(Server, Reliable, WithValidation)
+	void Reload();
+	bool Reload_Validate();
+	virtual void Reload_Implementation();
 
 	// Animation Replication
 public:
@@ -126,6 +135,11 @@ public:
 	void ApplyRecoil(float Val);
 	bool ApplyRecoil_Validate(float Val);
 	void ApplyRecoil_Implementation(float Val);
+
+	UFUNCTION(BlueprintCallable, NetMulticast, Reliable, WithValidation)
+	void ReplicateAnimMontage(UAnimMontage* AnimMontage);
+	bool ReplicateAnimMontage_Validate(UAnimMontage* AnimMontage);
+	void ReplicateAnimMontage_Implementation(UAnimMontage* AnimMontage);
 
 protected:
 	// Mesh Visibility Overlap Events

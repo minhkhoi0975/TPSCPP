@@ -212,6 +212,16 @@ void ACharacterBase::ApplyRecoil_Implementation(float Val)
 	AddControllerPitchInput(Val);
 }
 
+bool ACharacterBase::ReplicateAnimMontage_Validate(UAnimMontage* AnimMontage)
+{
+	return true;
+}
+
+void ACharacterBase::ReplicateAnimMontage_Implementation(UAnimMontage* AnimMontage)
+{
+	PlayAnimMontage(AnimMontage);
+}
+
 void ACharacterBase::InputStartFiring()
 {
 	StartFiring();
@@ -220,6 +230,11 @@ void ACharacterBase::InputStartFiring()
 void ACharacterBase::InputStopFiring()
 {
 	StopFiring();
+}
+
+void ACharacterBase::InputReload()
+{
+	Reload();
 }
 
 bool ACharacterBase::StartFiring_Validate()
@@ -249,6 +264,23 @@ void ACharacterBase::StopFiring_Implementation()
 	if (!IsValid(WeaponCurrent))
 	{
 		WeaponCurrent->StopFiring();
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("WeaponCurrent=nullptr"));
+	}
+}
+
+bool ACharacterBase::Reload_Validate()
+{
+	return true;
+}
+
+void ACharacterBase::Reload_Implementation()
+{
+	if (IsValid(WeaponCurrent))
+	{
+		WeaponCurrent->Reload();
 	}
 	else
 	{
@@ -316,6 +348,8 @@ void ACharacterBase::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 
 	PlayerInputComponent->BindAction("Fire", IE_Pressed, this, &ACharacterBase::InputStartFiring);
 	PlayerInputComponent->BindAction("Fire", IE_Released, this, &ACharacterBase::InputStopFiring);
+
+	PlayerInputComponent->BindAction("Reload", IE_Pressed, this, &ACharacterBase::InputReload);
 }
 
 bool ACharacterBase::CanBeSeenFrom(const FVector& ObserverLocation, FVector& OutSeenLocation, int32& NumberOfLoSChecksPerformed, float& OutSightStrength, const AActor* IgnoreActor) const

@@ -82,7 +82,10 @@ bool AWeaponBase::StartFiring_Validate()
 void AWeaponBase::StartFiring_Implementation()
 {
 	bFiring = true;
-	Fire();
+	if (!IsGunOutOfAmmo())
+	{
+		Fire();
+	}
 }
 
 bool AWeaponBase::ApplyRecoil_Validate()
@@ -187,6 +190,9 @@ void AWeaponBase::Fire_Implementation()
 		PlayEffect(EffectImpact, ImpactTransform);
 	}
 
+	// Reduce ammo
+	ReduceAmmo();
+
 	// Recoil and camera shake.
 	RecoilTimeline.PlayFromStart();
 	if (IsValid(CarryingCharacter))
@@ -198,13 +204,20 @@ void AWeaponBase::Fire_Implementation()
 		}
 	}
 
-
 	// Play shooting sound.
 	PlayShootingSound();
 
 	// Play muzzle flash effect.
 	FTransform MuzzleFlashTransform = GunMesh->GetSocketTransform("Muzzle");
 	PlayEffect(EffectMuzzleFlash, MuzzleFlashTransform, Muzzle);
+}
+
+void AWeaponBase::ReduceAmmo()
+{
+	if (HasAuthority())
+	{
+		AmmoMagazine -= AmmoPerShot;
+	}
 }
 
 bool AWeaponBase::IsGunOutOfAmmo()
@@ -228,6 +241,49 @@ void AWeaponBase::PlayShootingSound_Implementation()
 	{
 		UE_LOG(LogTemp, Warning, TEXT("The sound is nullptr."));
 	}
+}
+
+bool AWeaponBase::Reload_Validate()
+{
+	return true;
+}
+
+void AWeaponBase::Reload_Implementation()
+{
+	ACharacterBase* CarryingCharacter = nullptr;
+	AActor* Instigator = GetInstigator();
+	if (IsValid(Instigator))
+	{
+		CarryingCharacter = Cast<ACharacterBase>(Instigator);
+	}
+
+	if (IsValid(CarryingCharacter) && IsValid(AnimMontageReload) && CanReload())
+	{
+		CarryingCharacter->ReplicateAnimMontage(AnimMontageReload);
+
+		// Put the ammo back to the inventory.
+		AmmoInventory += AmmoMagazine;
+
+		// Put a new magazine into the gun.
+		if (AmmoInventory >= AmmoMagazineMax)
+		{
+			AmmoMagazine = AmmoMagazineMax;
+		}
+		else
+		{
+			AmmoMagazine = AmmoInventory;
+		}
+		AmmoInventory -= AmmoMagazine;
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("The weapon has no reload animation montage."));
+	}
+}
+
+bool AWeaponBase::CanReload()
+{
+	return AmmoInventory > 0;
 }
 
 bool AWeaponBase::PlayEffect_Validate(UParticleSystem* ParticleEffect, const FTransform& SpawnTransform, USceneComponent* AttachToComponent)
