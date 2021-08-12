@@ -102,12 +102,11 @@ void AWeaponBase::ApplyRecoil_Implementation()
 		ACharacterBase* CarryingCharacter = Cast<ACharacterBase>(Instigator);
 		if (IsValid(CarryingCharacter))
 		{
-			//CarryingCharacter->AddControllerPitchInput(RecoilTimeline.GetPlaybackPosition() * RecoilInNegative);
 			CarryingCharacter->ApplyRecoil(RecoilTimeline.GetPlaybackPosition() * RecoilScale);
 		}
 	}
 
-	UE_LOG(LogTemp, Display, TEXT("Recoil"));
+	//UE_LOG(LogTemp, Display, TEXT("Recoil"));
 }
 
 bool AWeaponBase::StopFiring_Validate()
@@ -260,20 +259,6 @@ void AWeaponBase::Reload_Implementation()
 	if (IsValid(CarryingCharacter) && IsValid(AnimMontageReload) && CanReload())
 	{
 		CarryingCharacter->ReplicateAnimMontage(AnimMontageReload);
-
-		// Put the ammo back to the inventory.
-		AmmoInventory += AmmoMagazine;
-
-		// Put a new magazine into the gun.
-		if (AmmoInventory >= AmmoMagazineMax)
-		{
-			AmmoMagazine = AmmoMagazineMax;
-		}
-		else
-		{
-			AmmoMagazine = AmmoInventory;
-		}
-		AmmoInventory -= AmmoMagazine;
 	}
 	else
 	{
