@@ -86,6 +86,10 @@ void AWeaponBase::StartFiring_Implementation()
 	{
 		Fire();
 	}
+	else if (CanReload())
+	{
+		Reload();
+	}
 }
 
 bool AWeaponBase::ApplyRecoil_Validate()
