@@ -17,6 +17,7 @@
 #include "AIController/CharacterAIController.h"
 #include "Engine/World.h"
 #include "UObject/ConstructorHelpers.h"
+#include "Animation/AnimInstance.h"
 #include "Net/UnrealNetwork.h"
 
 // Sets default values
@@ -236,14 +237,27 @@ void ACharacterBase::ApplyRecoil_Implementation(float Val)
 	AddControllerPitchInput(Val);
 }
 
-bool ACharacterBase::ReplicateAnimMontage_Validate(UAnimMontage* AnimMontage)
+bool ACharacterBase::ReplicateAnimMontagePlay_Validate(UAnimMontage* AnimMontage)
 {
 	return true;
 }
 
-void ACharacterBase::ReplicateAnimMontage_Implementation(UAnimMontage* AnimMontage)
+void ACharacterBase::ReplicateAnimMontagePlay_Implementation(UAnimMontage* AnimMontage)
 {
 	PlayAnimMontage(AnimMontage);
+}
+
+bool ACharacterBase::ReplicateAnimMontageJumpToSection_Validate(FName SectionName, const UAnimMontage* AnimMontage)
+{
+	return true;
+}
+
+void ACharacterBase::ReplicateAnimMontageJumpToSection_Implementation(FName SectionName, const UAnimMontage* AnimMontage)
+{
+	if (AnimMontage)
+	{
+		CharacterMeshComponent->GetAnimInstance()->Montage_JumpToSection(SectionName, AnimMontage);
+	}
 }
 
 void ACharacterBase::InputStartFiring()

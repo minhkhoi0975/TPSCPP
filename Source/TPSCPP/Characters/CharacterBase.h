@@ -137,9 +137,14 @@ public:
 	void ApplyRecoil_Implementation(float Val);
 
 	UFUNCTION(BlueprintCallable, NetMulticast, Reliable, WithValidation)
-	void ReplicateAnimMontage(UAnimMontage* AnimMontage);
-	bool ReplicateAnimMontage_Validate(UAnimMontage* AnimMontage);
-	void ReplicateAnimMontage_Implementation(UAnimMontage* AnimMontage);
+	void ReplicateAnimMontagePlay(UAnimMontage* AnimMontage);
+	bool ReplicateAnimMontagePlay_Validate(UAnimMontage* AnimMontage);
+	void ReplicateAnimMontagePlay_Implementation(UAnimMontage* AnimMontage);
+
+	UFUNCTION(BlueprintCallable, NetMulticast, Reliable, WithValidation)
+	void ReplicateAnimMontageJumpToSection(FName SectionName, const UAnimMontage* AnimMontage);
+	bool ReplicateAnimMontageJumpToSection_Validate(FName SectionName, const UAnimMontage* AnimMontage);
+	void ReplicateAnimMontageJumpToSection_Implementation(FName SectionName, const UAnimMontage* AnimMontage);
 
 protected:
 	// Mesh Visibility Overlap Events
