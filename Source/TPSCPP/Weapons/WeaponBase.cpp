@@ -159,7 +159,7 @@ void AWeaponBase::Fire_Implementation()
 			// Find end point.
 			EndLocation = StartLocation + FiringDirection * 1000000;
 
-			UE_LOG(LogTemp, Display, TEXT("Shoot from camera."));
+			// UE_LOG(LogTemp, Display, TEXT("Shoot from camera."));
 		}
 		// If the gun has no carrying character or is being carried by an NPC, line trace from muzzle.
 		else
@@ -174,7 +174,7 @@ void AWeaponBase::Fire_Implementation()
 			// Find end point.
 			EndLocation = StartLocation + FiringDirection * 1000000;
 
-			UE_LOG(LogTemp, Display, TEXT("Shoot from muzzle."));
+			// UE_LOG(LogTemp, Display, TEXT("Shoot from muzzle."));
 		}
 
 		// When line tracing, ignore the shooter and the gun itself.

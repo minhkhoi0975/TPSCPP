@@ -42,14 +42,14 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ammo")
 	int AmmoMagazineMax = 30;
 	/**The number of bullets in the current magazine.*/
-	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadWrite, Category = "Ammo")
+	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite, Category = "Ammo")
 	int AmmoMagazine = AmmoMagazineMax;
 	/**The number of bullets the player can keep (including the ones in the gun).*/
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ammo")
 	int AmmoMax = 300;
 	/**The number of bullets in player's inventory (not in the gun).*/
-	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadWrite, Category = "Ammo")
-	int AmmoInventory = AmmoMax - AmmoMagazineMax;
+	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite, Category = "Ammo")
+	int AmmoInventory = AmmoMax - AmmoMagazine;
 
 	/**The number of bullets fired in each shot.*/
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ammo")
