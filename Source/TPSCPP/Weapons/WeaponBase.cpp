@@ -271,7 +271,7 @@ void AWeaponBase::Reload_Implementation()
 
 	if (IsValid(CarryingCharacter) && IsValid(AnimMontageReload) && CanReload())
 	{
-		CarryingCharacter->ReplicateAnimMontage(AnimMontageReload);
+		CarryingCharacter->ReplicateAnimMontagePlay(AnimMontageReload);
 	}
 	else
 	{
