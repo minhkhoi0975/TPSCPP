@@ -24,7 +24,7 @@ void UAnimNotifyInsertBulletShotgun::Notify(USkeletalMeshComponent* MeshComp, UA
 			if (Weapon->AmmoMagazine < Weapon->AmmoMagazineMax && Weapon->AmmoInventory > 0)
 			{
 				// Character->CharacterMeshComponent->GetAnimInstance()->Montage_JumpToSection("ReloadLoopStarts", Weapon->AnimMontageReload);
-				Character->ReplicateAnimMontageJumpToSection("ReloadLoopStarts", Weapon->AnimMontageReload);
+				Character->ReplicateAnimMontageJumpToSection(ReloadLoopStartSectionName, Weapon->AnimMontageReload);
 			}
 		}
 	}
