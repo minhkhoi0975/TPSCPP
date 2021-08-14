@@ -59,6 +59,7 @@ void AWeaponBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifet
 	DOREPLIFETIME(AWeaponBase, AmmoMagazine);
 	DOREPLIFETIME(AWeaponBase, AmmoInventory);
 	DOREPLIFETIME(AWeaponBase, bFiring);
+	DOREPLIFETIME(AWeaponBase, WeaponFlags);
 }
 
 // Called every frame
@@ -81,8 +82,8 @@ bool AWeaponBase::StartFiring_Validate()
 
 void AWeaponBase::StartFiring_Implementation()
 {
-	bFiring = true;
-	if (!IsGunOutOfAmmo())
+	WeaponFlags |= GetWeaponFlag(EWeaponFlags::Firing);
+	if (!IsCurrentMagazineEmpty() && !(WeaponFlags & GetWeaponFlag(EWeaponFlags::Reloading)))
 	{
 		Fire();
 	}
@@ -120,7 +121,7 @@ bool AWeaponBase::StopFiring_Validate()
 
 void AWeaponBase::StopFiring_Implementation()
 {
-	bFiring = false;
+	WeaponFlags &= ~GetWeaponFlag(EWeaponFlags::Firing);
 }
 
 bool AWeaponBase::Fire_Validate()
@@ -223,7 +224,7 @@ void AWeaponBase::ReduceAmmo()
 	}
 }
 
-bool AWeaponBase::IsGunOutOfAmmo()
+bool AWeaponBase::IsCurrentMagazineEmpty()
 {
 	return AmmoMagazine <= 0;
 }
@@ -272,7 +273,7 @@ void AWeaponBase::Reload_Implementation()
 
 bool AWeaponBase::CanReload()
 {
-	return AmmoInventory > 0;
+	return AmmoInventory > 0 && !(WeaponFlags & GetWeaponFlag(EWeaponFlags::Reloading)) && AmmoMagazine < AmmoMagazineMax;
 }
 
 bool AWeaponBase::PlayEffect_Validate(UParticleSystem* ParticleEffect, const FTransform& SpawnTransform, USceneComponent* AttachToComponent)

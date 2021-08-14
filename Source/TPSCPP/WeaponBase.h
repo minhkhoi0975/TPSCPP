@@ -9,6 +9,16 @@
 #include "Camera/CameraShake.h"
 #include "WeaponBase.generated.h"
 
+#define GetWeaponFlag(WeaponFlag) static_cast<uint8>(WeaponFlag)
+
+UENUM(BlueprintType, Meta = (Bitflags))
+enum class EWeaponFlags : uint8
+{
+	Firing     = (1 << 0),
+	Reloading  = (1 << 1),
+	END
+};
+
 UCLASS()
 class TPSCPP_API AWeaponBase : public AActor
 {
@@ -84,6 +94,9 @@ public:
 	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadWrite, Category = "Status")
 	bool bFiring = false;
 
+	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite, Category = "Flags", meta = (Bitmask, BitmaskEnum = EWeaponFlags))
+	uint8 WeaponFlags;
+
 	/**Impact effect.*/
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
 	UAnimMontage* AnimMontageReload;
@@ -130,7 +143,7 @@ public:
 
 	/**Check if the magazine in the gun runs out of ammo.*/
 	UFUNCTION(BlueprintCallable)
-	bool IsGunOutOfAmmo();
+	bool IsCurrentMagazineEmpty();
 
 	UFUNCTION(BlueprintCallable, Server, Reliable, WithValidation)
 	void Reload();
