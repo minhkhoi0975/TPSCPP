@@ -249,13 +249,6 @@ void ACharacterBase::ReplicateAnimMontage_Implementation(UAnimMontage* AnimMonta
 void ACharacterBase::InputStartFiring()
 {
 	StartFiring();
-
-	if (IsValid(WeaponCurrent))
-	{
-		FString AmmoMagazineString = FString::FromInt(WeaponCurrent->AmmoMagazine);
-		FString AmmoInventoryString = FString::FromInt(WeaponCurrent->AmmoInventory);
-		UE_LOG(LogTemp, Display, TEXT("%s/%s"), *AmmoMagazineString, *AmmoInventoryString);
-	}
 }
 
 void ACharacterBase::InputStopFiring()
@@ -292,7 +285,7 @@ bool ACharacterBase::StopFiring_Validate()
 
 void ACharacterBase::StopFiring_Implementation()
 {
-	if (!IsValid(WeaponCurrent))
+	if (IsValid(WeaponCurrent))
 	{
 		WeaponCurrent->StopFiring();
 	}

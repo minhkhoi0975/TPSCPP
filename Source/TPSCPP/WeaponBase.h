@@ -78,6 +78,13 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Accuracy")
 	TSubclassOf<UCameraShake> CameraShakeClass = TSubclassOf<UCameraShake>();
 
+	/**How long before next shot.*/
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Fire Rate")
+	float FireRate;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Fire Rate")
+	FTimerHandle FireTimerHandle;
+
 	/**Firing sound.*/
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
 	class USoundCue* SoundFire;
