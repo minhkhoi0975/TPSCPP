@@ -6,6 +6,8 @@
 #include "Weapons/WeaponBase.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "Animation/AnimSequence.h"
+#include "Animation/AnimMontage.h"
+#include "Animation/AnimInstance.h"
 
 void UAnimNotifyInsertBulletShotgun::Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation)
 {
@@ -14,10 +16,16 @@ void UAnimNotifyInsertBulletShotgun::Notify(USkeletalMeshComponent* MeshComp, UA
 	if (IsValid(Character) && Character->HasAuthority())
 	{
 		AWeaponBase* Weapon = Character->WeaponCurrent;
-		if (IsValid(Weapon) && Weapon->AmmoMagazine < Weapon->AmmoMagazineMax && Weapon->AmmoInventory > 0)
+		if (IsValid(Weapon))
 		{
 			Weapon->AmmoMagazine++;
 			Weapon->AmmoInventory--;
+
+			if (Weapon->AmmoMagazine < Weapon->AmmoMagazineMax && Weapon->AmmoInventory > 0)
+			{
+				// Character->CharacterMeshComponent->GetAnimInstance()->Montage_JumpToSection("ReloadLoopStarts", Weapon->AnimMontageReload);
+				Character->ReplicateAnimMontageJumpToSection("ReloadLoopStarts", Weapon->AnimMontageReload);
+			}
 		}
 	}
 }
