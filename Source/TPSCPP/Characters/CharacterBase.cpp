@@ -80,6 +80,9 @@ ACharacterBase::ACharacterBase(): Super()
 	MeshVisibility->RelativeLocation = FVector(-6.85f, 0.0f, 0.0f);
 	MeshVisibility->SetSphereRadius(12.0f);
 
+	// Weapon inventory.
+	Inventory.SetNum(4);    // Each character can carry up to 4 weapons.
+
 	// Configure AI Perception Stimuli Source
 	AIPerceptionStimuliSource = CreateDefaultSubobject<UAIPerceptionStimuliSourceComponent>(TEXT("AI_StimuliSource"));
 	AIPerceptionStimuliSource->bAutoRegister = true;
@@ -113,6 +116,8 @@ void ACharacterBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLi
 
 	DOREPLIFETIME(ACharacterBase, HealthCurrent);
 	DOREPLIFETIME(ACharacterBase, WeaponCurrent);
+	DOREPLIFETIME(ACharacterBase, Inventory);
+	DOREPLIFETIME(ACharacterBase, WeaponCurrentIndex);
 
 	DOREPLIFETIME(ACharacterBase, bJumpButtonDown);
 	DOREPLIFETIME(ACharacterBase, bCrouchButtonDown);
@@ -323,6 +328,22 @@ void ACharacterBase::Reload_Implementation()
 	else
 	{
 		UE_LOG(LogTemp, Warning, TEXT("WeaponCurrent=nullptr"));
+	}
+}
+
+void ACharacterBase::SpawnWeapon(TSubclassOf<AWeaponBase> WeaponClass, int AmmoMagazine, int AmmoInventory)
+{
+	if (HasAuthority())
+	{
+		// Spawn weapon
+		WeaponCurrent = GetWorld()->SpawnActorDeferred<AWeaponBase>(WeaponClass, GetActorTransform(), this, this);
+		WeaponCurrent->AmmoMagazine = (AmmoMagazine >= 0 && AmmoMagazine <= WeaponCurrent->AmmoMagazineMax) ? AmmoMagazine : WeaponCurrent->AmmoMagazineMax;
+		WeaponCurrent->AmmoInventory = (AmmoInventory >= 0 && AmmoInventory <= (WeaponCurrent->AmmoMax - WeaponCurrent->AmmoMagazine)) ? AmmoInventory: WeaponCurrent->AmmoMax - WeaponCurrent->AmmoMagazine;
+		WeaponCurrent->FinishSpawning(WeaponCurrent->GetActorTransform());
+
+		// Attach weapon to character's hands.
+		FAttachmentTransformRules AttachmentTransformRules(EAttachmentRule::SnapToTarget, EAttachmentRule::SnapToTarget, EAttachmentRule::SnapToTarget, true);
+		WeaponCurrent->AttachToComponent(CharacterMeshComponent, AttachmentTransformRules, "gun_socket");
 	}
 }
 

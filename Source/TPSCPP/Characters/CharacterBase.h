@@ -7,6 +7,7 @@
 #include "Perception/AISightTargetInterface.h"
 #include "Components/TimelineComponent.h"
 #include "Animation/AnimMontage.h"
+#include "Weapons/WeaponBase.h"
 #include "CharacterBase.generated.h"
 
 UCLASS(Blueprintable)
@@ -53,6 +54,14 @@ public:
 	/** Current weapon the character is holding on its hand.*/
 	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite, Category = "Weapon")
 	class AWeaponBase* WeaponCurrent;
+
+	/** Character's inventory*/
+	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite, Category = "Weapon")
+	TArray<FWeaponInstance> Inventory;
+
+	/** The index of WeaponCurrent*/
+	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite, Category = "Weapon")
+	int WeaponCurrentIndex;
 
 	/** Is the jump button down?*/
 	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadWrite, Category = "InputStatus")
@@ -107,6 +116,10 @@ public:
 	void Reload();
 	bool Reload_Validate();
 	virtual void Reload_Implementation();
+
+	/** Spawn a weapon and attach it to character's hands. If AmmoMagazine < 0, then AmmoMagazine = AmmoMagazineMax. If AmmoInventory < 0, then AmmoInventory = AmmoMax - AmmoMagazine.*/
+	UFUNCTION(BlueprintCallable)
+	void SpawnWeapon(TSubclassOf<AWeaponBase> WeaponClass, int AmmoMagazine = -1, int AmmoInventory = -1);
 
 	// Animation Replication
 public:
