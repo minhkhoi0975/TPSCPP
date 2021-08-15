@@ -171,7 +171,7 @@ void AWeaponBase::Fire_Implementation()
 		else
 		{
 			// Find the starting point of line trace.
-			StartLocation = Muzzle->GetComponentLocation();
+			StartLocation = GunMesh->GetSocketLocation("Muzzle");
 
 			// Get forward vector and "bend" it to become firing direction.
 			FiringDirection = GetActorForwardVector();
