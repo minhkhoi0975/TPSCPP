@@ -10,6 +10,21 @@
 #include "Weapons/WeaponBase.h"
 #include "CharacterBase.generated.h"
 
+#define GetCharacterFlag(CharacterFlag) static_cast<uint8>(CharacterFlag)
+
+/**
+ * Character Flags
+ */
+UENUM(BlueprintType, Meta = (Bitflags))
+enum class ECharacterFlags : uint8
+{
+	Jumping         = (1 << 0),
+	Crouching       = (1 << 1),
+	Firing          = (1 << 2),
+	SwitchingWeapon = (1 << 3),
+	END
+};
+
 UCLASS(Blueprintable)
 class TPSCPP_API ACharacterBase : public ACharacter, public IAISightTargetInterface
 {
@@ -71,9 +86,17 @@ public:
 	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadWrite, Category = "InputStatus")
 	bool bCrouchButtonDown = false;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
+	UAnimMontage* AnimMontageWeaponSwitch;
+
 	/** Animation status*/
 	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadWrite, Category = "AnimationStatus")
 	FRotator ControlRotation;
+
+	/** Flags*/
+	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadWrite, Category = "AnimationStatus", Meta = (Bitmask, BitmaskEnum = ECharacterFlags))
+	uint8 CharacterFlags;
+    
 
 protected:
 	// Called when the game starts or when spawned
@@ -101,6 +124,12 @@ protected:
 	// Reload
 	void InputReload();
 
+	// Switch Weapon
+	void InputSwitchWeapon1();
+	void InputSwitchWeapon2();
+	void InputSwitchWeapon3();
+	void InputSwitchWeapon4();
+
 public:
 	UFUNCTION(Server, Reliable, WithValidation)
 	void StartFiring();
@@ -117,9 +146,18 @@ public:
 	bool Reload_Validate();
 	virtual void Reload_Implementation();
 
+	UFUNCTION(BlueprintCallable, Server, Reliable, WithValidation)
+	void SwitchWeapon(int NewWeaponCurrentIndex);
+	bool SwitchWeapon_Validate(int NewWeaponCurrentIndex);
+	void SwitchWeapon_Implementation(int NewWeaponCurrentIndex);
+
 	/** Spawn a weapon and attach it to character's hands. If AmmoMagazine < 0, then AmmoMagazine = AmmoMagazineMax. If AmmoInventory < 0, then AmmoInventory = AmmoMax - AmmoMagazine.*/
 	UFUNCTION(BlueprintCallable)
 	void SpawnWeapon(TSubclassOf<AWeaponBase> WeaponClass, int AmmoMagazine = -1, int AmmoInventory = -1);
+
+	/** Save the info of the current weapon in Inventory.*/
+	UFUNCTION(BlueprintCallable)
+	void SaveCurrentWeaponInfo();
 
 	// Animation Replication
 public:

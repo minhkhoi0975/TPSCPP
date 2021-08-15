@@ -122,6 +122,8 @@ void ACharacterBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLi
 	DOREPLIFETIME(ACharacterBase, bJumpButtonDown);
 	DOREPLIFETIME(ACharacterBase, bCrouchButtonDown);
 	DOREPLIFETIME(ACharacterBase, ControlRotation);
+
+	DOREPLIFETIME(ACharacterBase, CharacterFlags);
 }
 
 void ACharacterBase::InputMoveForward(float Value)
@@ -280,6 +282,30 @@ void ACharacterBase::InputReload()
 	Reload();
 }
 
+void ACharacterBase::InputSwitchWeapon1()
+{
+	SwitchWeapon(0);
+	UE_LOG(LogTemp, Display, TEXT("Switch to weapon 1"));
+}
+
+void ACharacterBase::InputSwitchWeapon2()
+{
+	SwitchWeapon(1);
+	UE_LOG(LogTemp, Display, TEXT("Switch to weapon 2"));
+}
+
+void ACharacterBase::InputSwitchWeapon3()
+{
+	SwitchWeapon(2);
+	UE_LOG(LogTemp, Display, TEXT("Switch to weapon 3"));
+}
+
+void ACharacterBase::InputSwitchWeapon4()
+{
+	SwitchWeapon(3);
+	UE_LOG(LogTemp, Display, TEXT("Switch to weapon 4"));
+}
+
 bool ACharacterBase::StartFiring_Validate()
 {
 	return true;
@@ -331,19 +357,62 @@ void ACharacterBase::Reload_Implementation()
 	}
 }
 
+bool ACharacterBase::SwitchWeapon_Validate(int NewWeaponCurrentIndex)
+{
+	return true;
+}
+
+void ACharacterBase::SwitchWeapon_Implementation(int NewWeaponCurrentIndex)
+{
+	// TODO:
+	// + Save data of current weapon into Inventory.
+	// + Set WeaponCurrentIndex.
+	// + Play animation montage.
+
+	if (Inventory.IsValidIndex(NewWeaponCurrentIndex) 
+		&& NewWeaponCurrentIndex != WeaponCurrentIndex 
+		&& !(CharacterFlags & GetCharacterFlag(ECharacterFlags::SwitchingWeapon))
+		&& IsValid(AnimMontageWeaponSwitch))
+	{
+		SaveCurrentWeaponInfo();
+		WeaponCurrentIndex = NewWeaponCurrentIndex;
+		ReplicateAnimMontagePlay(AnimMontageWeaponSwitch);
+	}
+}
+
 void ACharacterBase::SpawnWeapon(TSubclassOf<AWeaponBase> WeaponClass, int AmmoMagazine, int AmmoInventory)
 {
 	if (HasAuthority())
 	{
 		// Spawn weapon
 		WeaponCurrent = GetWorld()->SpawnActorDeferred<AWeaponBase>(WeaponClass, GetActorTransform(), this, this);
-		WeaponCurrent->AmmoMagazine = (AmmoMagazine >= 0 && AmmoMagazine <= WeaponCurrent->AmmoMagazineMax) ? AmmoMagazine : WeaponCurrent->AmmoMagazineMax;
-		WeaponCurrent->AmmoInventory = (AmmoInventory >= 0 && AmmoInventory <= (WeaponCurrent->AmmoMax - WeaponCurrent->AmmoMagazine)) ? AmmoInventory: WeaponCurrent->AmmoMax - WeaponCurrent->AmmoMagazine;
-		WeaponCurrent->FinishSpawning(WeaponCurrent->GetActorTransform());
+		if (IsValid(WeaponCurrent))
+		{
+			WeaponCurrent->AmmoMagazine = (AmmoMagazine >= 0 && AmmoMagazine <= WeaponCurrent->AmmoMagazineMax) ? AmmoMagazine : WeaponCurrent->AmmoMagazineMax;
+			WeaponCurrent->AmmoInventory = (AmmoInventory >= 0 && AmmoInventory <= (WeaponCurrent->AmmoMax - WeaponCurrent->AmmoMagazine)) ? AmmoInventory : WeaponCurrent->AmmoMax - WeaponCurrent->AmmoMagazine;
+			WeaponCurrent->FinishSpawning(WeaponCurrent->GetActorTransform());
 
-		// Attach weapon to character's hands.
-		FAttachmentTransformRules AttachmentTransformRules(EAttachmentRule::SnapToTarget, EAttachmentRule::SnapToTarget, EAttachmentRule::SnapToTarget, true);
-		WeaponCurrent->AttachToComponent(CharacterMeshComponent, AttachmentTransformRules, "gun_socket");
+			// Attach weapon to character's hands.
+			FAttachmentTransformRules AttachmentTransformRules(EAttachmentRule::SnapToTarget, EAttachmentRule::SnapToTarget, EAttachmentRule::SnapToTarget, true);
+			WeaponCurrent->AttachToComponent(CharacterMeshComponent, AttachmentTransformRules, "gun_socket");
+		}
+		else
+		{
+			UE_LOG(LogTemp, Error, TEXT("Cannot spawn weapon"));
+		}
+	}
+}
+
+void ACharacterBase::SaveCurrentWeaponInfo()
+{
+	if (HasAuthority())
+	{
+		if (IsValid(WeaponCurrent) && Inventory.IsValidIndex(WeaponCurrentIndex))
+		{
+			Inventory[WeaponCurrentIndex].WeaponClass = WeaponCurrent->GetClass();
+			Inventory[WeaponCurrentIndex].AmmoMagazine = WeaponCurrent->AmmoMagazine;
+			Inventory[WeaponCurrentIndex].AmmoInventory = WeaponCurrent->AmmoInventory;
+		}
 	}
 }
 
@@ -409,6 +478,11 @@ void ACharacterBase::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 	PlayerInputComponent->BindAction("Fire", IE_Released, this, &ACharacterBase::InputStopFiring);
 
 	PlayerInputComponent->BindAction("Reload", IE_Pressed, this, &ACharacterBase::InputReload);
+
+	PlayerInputComponent->BindAction("Weapon1", IE_Pressed, this, &ACharacterBase::InputSwitchWeapon1);
+	PlayerInputComponent->BindAction("Weapon2", IE_Pressed, this, &ACharacterBase::InputSwitchWeapon2);
+	PlayerInputComponent->BindAction("Weapon3", IE_Pressed, this, &ACharacterBase::InputSwitchWeapon3);
+	PlayerInputComponent->BindAction("Weapon4", IE_Pressed, this, &ACharacterBase::InputSwitchWeapon4);
 }
 
 bool ACharacterBase::CanBeSeenFrom(const FVector& ObserverLocation, FVector& OutSeenLocation, int32& NumberOfLoSChecksPerformed, float& OutSightStrength, const AActor* IgnoreActor) const
