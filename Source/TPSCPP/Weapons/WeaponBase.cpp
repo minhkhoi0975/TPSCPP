@@ -142,6 +142,12 @@ void AWeaponBase::Fire_Implementation()
 			CarryingCharacter = Cast<ACharacterBase>(Instigator);
 		}
 
+		// Abort this function if the carrying character is switching weapon.
+		if (IsValid(CarryingCharacter) && (CarryingCharacter->CharacterFlags & GetCharacterFlag(ECharacterFlags::SwitchingWeapon)))
+		{
+			return;
+		}
+
 		FVector StartLocation;
 		FVector FiringDirection;
 		FVector EndLocation;
