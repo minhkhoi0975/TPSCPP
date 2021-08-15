@@ -11,6 +11,27 @@
 
 #define GetWeaponFlag(WeaponFlag) static_cast<uint8>(WeaponFlag)
 
+/**
+ * Weapon Instance struct, used for inventory system.
+ */
+USTRUCT(BlueprintType)
+struct FWeaponInstance
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TSubclassOf<AWeaponBase> WeaponClass;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	int AmmoMagazine;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	int AmmoInventory;
+};
+
+/**
+ * Weapon Flags
+ */
 UENUM(BlueprintType, Meta = (Bitflags))
 enum class EWeaponFlags : uint8
 {
