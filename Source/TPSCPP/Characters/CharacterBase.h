@@ -130,6 +130,12 @@ protected:
 	void InputSwitchWeapon3();
 	void InputSwitchWeapon4();
 
+	// Interact
+	void InputInteract();
+
+	// Drop weapon
+	void InputDropWeapon();
+
 public:
 	UFUNCTION(Server, Reliable, WithValidation)
 	void StartFiring();
@@ -158,6 +164,18 @@ public:
 	/** Save the info of the current weapon in Inventory.*/
 	UFUNCTION(BlueprintCallable)
 	void SaveCurrentWeaponInfo();
+
+	
+	UFUNCTION(BlueprintCallable, Server, Reliable, WithValidation)
+	void Interact();
+	bool Interact_Validate();
+	void Interact_Implementation();
+
+	UFUNCTION(BlueprintCallable, Server, Reliable, WithValidation)
+	void DropWeapon();
+	bool DropWeapon_Validate();
+	void DropWeapon_Implementation();
+
 
 	// Animation Replication
 public:

@@ -3,6 +3,8 @@
 
 #include "CharacterBase.h"
 #include "Weapons/WeaponBase.h"
+#include "PickUps/PickUpWeapon.h"
+#include "Interfaces/Interactable.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "GameFramework/SpringArmComponent.h"
@@ -19,6 +21,7 @@
 #include "UObject/ConstructorHelpers.h"
 #include "Animation/AnimInstance.h"
 #include "Net/UnrealNetwork.h"
+#include "DrawDebugHelpers.h"
 
 // Sets default values
 ACharacterBase::ACharacterBase(): Super()
@@ -370,7 +373,7 @@ void ACharacterBase::SwitchWeapon_Implementation(int NewWeaponCurrentIndex)
 	// + Play animation montage.
 
 	if (Inventory.IsValidIndex(NewWeaponCurrentIndex) 
-		&& NewWeaponCurrentIndex != WeaponCurrentIndex 
+		&& (NewWeaponCurrentIndex != WeaponCurrentIndex  || !IsValid(WeaponCurrent))
 		&& !(CharacterFlags & GetCharacterFlag(ECharacterFlags::SwitchingWeapon))
 		&& IsValid(AnimMontageWeaponSwitch))
 	{
@@ -413,6 +416,103 @@ void ACharacterBase::SaveCurrentWeaponInfo()
 			Inventory[WeaponCurrentIndex].AmmoMagazine = WeaponCurrent->AmmoMagazine;
 			Inventory[WeaponCurrentIndex].AmmoInventory = WeaponCurrent->AmmoInventory;
 		}
+	}
+}
+
+
+
+void ACharacterBase::InputInteract()
+{
+	Interact();
+}
+
+void ACharacterBase::InputDropWeapon()
+{
+	DropWeapon();
+}
+
+bool ACharacterBase::Interact_Validate()
+{
+	return true;
+}
+
+void ACharacterBase::Interact_Implementation()
+{
+	// TODO:
+	// Find an interactable actor by line tracing from camera.
+	// If there is an interactable actor, interact it. 
+
+	FVector StartLocation = Camera->GetComponentLocation();
+	FVector EndLocation = StartLocation + Camera->GetForwardVector() * 300.0f;
+
+	FCollisionQueryParams CollisionQuerryParams;
+	CollisionQuerryParams.AddIgnoredActor(this);
+	CollisionQuerryParams.AddIgnoredActor(WeaponCurrent);
+
+	FHitResult HitResult;
+	bool Hit = GetWorld()->LineTraceSingleByChannel(HitResult, StartLocation, EndLocation, ECollisionChannel::ECC_Visibility, CollisionQuerryParams);
+	DrawDebugLine(GetWorld(), StartLocation, EndLocation, FColor::Green, false, 5.0f);
+
+	AActor* HitActor = HitResult.GetActor();
+
+	if (Hit && HitActor)
+	{
+		IInteractable* InteractableActor = nullptr;
+
+		// Check if the hit actor implements IInteractable.
+		InteractableActor = Cast<IInteractable>(HitActor);
+		if (InteractableActor)
+		{
+			InteractableActor->OnInteracted(this);
+			return;
+		}
+
+		// Check if the owner of the hit actor implements IInteractable.
+		AActor* HitActorOwner = HitActor->GetOwner();
+		if (IsValid(HitActorOwner))
+		{
+			InteractableActor = Cast<IInteractable>(HitActorOwner);
+			if (InteractableActor)
+			{
+				InteractableActor->OnInteracted(this);
+				return;
+			}
+		}
+	}
+}
+
+bool ACharacterBase::DropWeapon_Validate()
+{
+	return true;
+}
+
+void ACharacterBase::DropWeapon_Implementation()
+{
+	if (IsValid(WeaponCurrent))
+	{
+		// Remove information about WeaponCurrent in Inventory.
+		Inventory[WeaponCurrentIndex].WeaponClass = nullptr;
+		Inventory[WeaponCurrentIndex].AmmoInventory = 0;
+		Inventory[WeaponCurrentIndex].AmmoMagazine = 0;
+
+		// Spawn a pick-up.
+		APickUpWeapon* PickUpWeapon = GetWorld()->SpawnActorDeferred<APickUpWeapon>(APickUpWeapon::StaticClass(), GetActorTransform());
+		if (IsValid(PickUpWeapon))
+		{
+			PickUpWeapon->WeaponInstance.WeaponClass = WeaponCurrent->GetClass();
+			PickUpWeapon->WeaponInstance.AmmoMagazine = WeaponCurrent->AmmoMagazine;
+			PickUpWeapon->WeaponInstance.AmmoInventory = WeaponCurrent->AmmoInventory;
+			PickUpWeapon->bWeaponMeshSimulatesPhysics = true;
+
+			PickUpWeapon->FinishSpawning(PickUpWeapon->GetActorTransform());
+		}
+		else
+		{
+			UE_LOG(LogTemp, Error, TEXT("Cannot spawn weapon pick-up."));
+		}
+		
+		// Destroy the weapon.
+		WeaponCurrent->Destroy();
 	}
 }
 
@@ -483,6 +583,10 @@ void ACharacterBase::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 	PlayerInputComponent->BindAction("Weapon2", IE_Pressed, this, &ACharacterBase::InputSwitchWeapon2);
 	PlayerInputComponent->BindAction("Weapon3", IE_Pressed, this, &ACharacterBase::InputSwitchWeapon3);
 	PlayerInputComponent->BindAction("Weapon4", IE_Pressed, this, &ACharacterBase::InputSwitchWeapon4);
+
+	PlayerInputComponent->BindAction("Interact", IE_Pressed, this, &ACharacterBase::InputInteract);
+
+	PlayerInputComponent->BindAction("DropWeapon", IE_Pressed, this, &ACharacterBase::InputDropWeapon);
 }
 
 bool ACharacterBase::CanBeSeenFrom(const FVector& ObserverLocation, FVector& OutSeenLocation, int32& NumberOfLoSChecksPerformed, float& OutSightStrength, const AActor* IgnoreActor) const
