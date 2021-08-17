@@ -350,3 +350,16 @@ void AWeaponBase::ReplicateSkeletalMeshMovement()
 	}
 }
 
+bool AWeaponBase::EnableSimulatePhysics_Validate()
+{
+	return true;
+}
+
+void AWeaponBase::EnableSimulatePhysics_Implementation()
+{
+	GunMesh->SetSimulatePhysics(true);
+	GunMesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Block);
+	GunMesh->SetCollisionEnabled(ECollisionEnabled::Type::QueryAndPhysics);
+	GunMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Ignore); // Don't let the character move the weapon.
+}
+

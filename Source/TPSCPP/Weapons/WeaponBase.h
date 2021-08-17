@@ -204,6 +204,13 @@ public:
 	void PlayEffect_Implementation(UParticleSystem* ParticleEffect, const FTransform& SpawnTransform, USceneComponent* AttachToComponent = nullptr);
 
 protected:
-	// Replicate the movement of this weapon, if it is simulating physics.
+	/** Replicate the movement of this weapon, if it is simulating physics. */
+	UFUNCTION(BlueprintCallable)
 	void ReplicateSkeletalMeshMovement();
+
+public:
+	UFUNCTION(BlueprintCallable, NetMulticast, Reliable, WithValidation)
+	void EnableSimulatePhysics();
+	bool EnableSimulatePhysics_Validate();
+	void EnableSimulatePhysics_Implementation();
 };
