@@ -77,6 +77,12 @@ void AWeaponShotgun::Fire_Implementation()
 			if (Hit)
 			{
 				// TODO: Apply damage to hit actor.
+				UPrimitiveComponent* HitComponent = HitResult.GetComponent();
+				if (IsValid(HitComponent) && HitComponent->IsSimulatingPhysics())
+				{
+					FVector Impulse = FiringDirection / FiringDirection.Size() * 300.0f;
+					HitComponent->AddImpulse(Impulse, HitResult.BoneName, true);
+				}
 
 				FVector ImpactLocation = HitResult.ImpactPoint;
 				FRotator ImpactRotator = FRotationMatrix::MakeFromX(HitResult.ImpactNormal).Rotator();
