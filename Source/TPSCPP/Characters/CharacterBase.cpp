@@ -367,11 +367,6 @@ bool ACharacterBase::SwitchWeapon_Validate(int NewWeaponCurrentIndex)
 
 void ACharacterBase::SwitchWeapon_Implementation(int NewWeaponCurrentIndex)
 {
-	// TODO:
-	// + Save data of current weapon into Inventory.
-	// + Set WeaponCurrentIndex.
-	// + Play animation montage.
-
 	if (Inventory.IsValidIndex(NewWeaponCurrentIndex) 
 		&& (NewWeaponCurrentIndex != WeaponCurrentIndex  || !IsValid(WeaponCurrent))
 		&& !(CharacterFlags & GetCharacterFlag(ECharacterFlags::SwitchingWeapon))
@@ -438,10 +433,6 @@ bool ACharacterBase::Interact_Validate()
 
 void ACharacterBase::Interact_Implementation()
 {
-	// TODO:
-	// Find an interactable actor by line tracing from camera.
-	// If there is an interactable actor, interact it. 
-
 	FVector StartLocation = Camera->GetComponentLocation();
 	FVector EndLocation = StartLocation + Camera->GetForwardVector() * 300.0f;
 
@@ -513,6 +504,16 @@ void ACharacterBase::DropWeapon_Implementation()
 		
 		// Destroy the weapon.
 		WeaponCurrent->Destroy();
+
+		// Automatically switch weapon.
+		for (int i = 0; i < Inventory.Num(); i++)
+		{
+			if (Inventory[i].WeaponClass)
+			{
+				SwitchWeapon(i);
+				return;
+			}
+		}
 	}
 }
 
@@ -536,7 +537,7 @@ void ACharacterBase::OnMeshVisibilityBeginOverlap(UPrimitiveComponent* Overlappe
 		CharacterMeshComponent->bCastHiddenShadow = true;
 	}
 
-	UE_LOG(LogTemp, Display, TEXT("Begin overlap"));
+	//UE_LOG(LogTemp, Display, TEXT("Begin overlap"));
 }
 
 void ACharacterBase::OnMeshVisibilityEndOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
@@ -546,7 +547,7 @@ void ACharacterBase::OnMeshVisibilityEndOverlap(UPrimitiveComponent* OverlappedC
 		CharacterMeshComponent->SetOwnerNoSee(false);
 	}
 
-	UE_LOG(LogTemp, Display, TEXT("End overlap"));
+	//UE_LOG(LogTemp, Display, TEXT("End overlap"));
 }
 
 // Called every frame
