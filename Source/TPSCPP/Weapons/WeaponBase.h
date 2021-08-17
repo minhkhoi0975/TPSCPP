@@ -130,6 +130,18 @@ public:
 	UAnimMontage* AnimMontageReload;
 
 protected:
+	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite, Category = "Replication")
+	bool Replicate;
+
+	/**Use to replicate movement of skeletal mesh.*/
+	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadWrite, Category = "Replication")
+	FVector GunMeshLocation;
+
+	/**Use to replicate movement of skeletal mesh.*/
+	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadWrite, Category = "Replication")
+	FRotator GunMeshRotation;
+
+protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
@@ -190,4 +202,8 @@ public:
 	void PlayEffect(UParticleSystem* ParticleEffect, const FTransform& SpawnTransform, USceneComponent* AttachToComponent = nullptr);
 	bool PlayEffect_Validate(UParticleSystem* ParticleEffect, const FTransform& SpawnTransform, USceneComponent* AttachToComponent = nullptr);
 	void PlayEffect_Implementation(UParticleSystem* ParticleEffect, const FTransform& SpawnTransform, USceneComponent* AttachToComponent = nullptr);
+
+protected:
+	// Replicate the movement of this weapon, if it is simulating physics.
+	void ReplicateSkeletalMeshMovement();
 };

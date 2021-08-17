@@ -62,12 +62,16 @@ void AWeaponBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifet
 	DOREPLIFETIME(AWeaponBase, AmmoInventory);
 	DOREPLIFETIME(AWeaponBase, bFiring);
 	DOREPLIFETIME(AWeaponBase, WeaponFlags);
+
+	DOREPLIFETIME(AWeaponBase, GunMeshLocation);
+	DOREPLIFETIME(AWeaponBase, GunMeshRotation);
 }
 
 // Called every frame
 void AWeaponBase::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+	ReplicateSkeletalMeshMovement();
 
 	RecoilTimeline.TickTimeline(DeltaTime);
 }
@@ -195,6 +199,12 @@ void AWeaponBase::Fire_Implementation()
 		if (Hit)
 		{
 			// TODO: Apply damage to hit actor.
+			UPrimitiveComponent* HitComponent = HitResult.GetComponent();
+			if (IsValid(HitComponent) && HitComponent->IsSimulatingPhysics())
+			{
+				FVector Impulse = FiringDirection / FiringDirection.Size() * 300.0f;
+				HitComponent->AddImpulse(Impulse, HitResult.BoneName, true);
+			}
 
 			FVector ImpactLocation = HitResult.ImpactPoint;
 			FRotator ImpactRotator = FRotationMatrix::MakeFromX(HitResult.ImpactNormal).Rotator();
@@ -320,6 +330,23 @@ void AWeaponBase::PlayEffect_Implementation(UParticleSystem* ParticleEffect, con
 	else
 	{
 		UE_LOG(LogTemp, Warning, TEXT("The effect is nullptr."));
+	}
+}
+
+void AWeaponBase::ReplicateSkeletalMeshMovement()
+{
+	if (GunMesh->IsSimulatingPhysics())
+	{
+		if (HasAuthority())
+		{
+			GunMeshLocation = GunMesh->GetComponentLocation();
+			GunMeshRotation = GunMesh->GetComponentRotation();
+		}
+		else
+		{
+			GunMesh->SetWorldLocation(GunMeshLocation, false, nullptr, ETeleportType::TeleportPhysics);
+			GunMesh->SetWorldRotation(GunMeshRotation, false, nullptr, ETeleportType::TeleportPhysics);
+		}
 	}
 }
 
