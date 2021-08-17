@@ -4,11 +4,12 @@
 
 #include "CoreMinimal.h"
 #include "Characters/CharacterBase.h"
+#include "Interfaces/Interactable.h"
 #include "GameFramework/Actor.h"
 #include "PickUpBase.generated.h"
 
 UCLASS()
-class TPSCPP_API APickUpBase : public AActor
+class TPSCPP_API APickUpBase : public AActor, public IInteractable
 {
 	GENERATED_BODY()
 
@@ -46,8 +47,5 @@ public:
 
 	virtual void DestroyPickUp();
 
-	UFUNCTION(BlueprintCallable, Server, Reliable, WithValidation)
-	void OnPickedUp(ACharacterBase* Character);
-	bool OnPickedUp_Validate(ACharacterBase* Character);
-	virtual void OnPickedUp_Implementation(ACharacterBase* Character);
+	virtual void OnInteracted(ACharacterBase* Character) override;
 };

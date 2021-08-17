@@ -42,14 +42,9 @@ void APickUpBase::Tick(float DeltaTime)
 
 }
 
-bool APickUpBase::OnPickedUp_Validate(ACharacterBase* Character)
+void APickUpBase::OnInteracted(ACharacterBase* Character)
 {
-	return true;
-}
-
-void APickUpBase::OnPickedUp_Implementation(ACharacterBase* Character)
-{
-	if (bDestroyedAfterPickup)
+	if (HasAuthority() && bDestroyedAfterPickup)
 	{
 		DestroyPickUp();
 	}

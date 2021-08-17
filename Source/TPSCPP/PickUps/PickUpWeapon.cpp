@@ -30,14 +30,7 @@ void APickUpWeapon::OnConstruction(const FTransform& Transform)
 
 			if (bWeaponMeshSimulatesPhysics)
 			{
-				Weapon->GunMesh->SetSimulatePhysics(true);
-				Weapon->GunMesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Block);
-				Weapon->GunMesh->SetCollisionEnabled(ECollisionEnabled::Type::QueryAndPhysics);
-				Weapon->GunMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Ignore); // Don't let the character move the weapon.
-			}
-			else
-			{
-				Weapon->GunMesh->SetSimulatePhysics(false);
+				Weapon->EnableSimulatePhysics();
 			}
 
 			FAttachmentTransformRules AttachmentTransformRules(EAttachmentRule::SnapToTarget, EAttachmentRule::SnapToTarget, EAttachmentRule::SnapToTarget, true);
@@ -53,6 +46,7 @@ void APickUpWeapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLif
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME(APickUpWeapon, Weapon);
+	DOREPLIFETIME(APickUpWeapon, bWeaponMeshSimulatesPhysics);
 }
 
 void APickUpWeapon::DestroyPickUp()
@@ -64,6 +58,31 @@ void APickUpWeapon::DestroyPickUp()
 			Weapon->Destroy();
 		}
 		Destroy();
+	}
+}
+
+void APickUpWeapon::OnInteracted(ACharacterBase* Character)
+{
+	if (HasAuthority() && IsValid(Character))
+	{
+		for (int i = 0; i < Character->Inventory.Num(); i++)
+		{
+			if (!(Character->Inventory[i].WeaponClass))
+			{
+				Character->Inventory[i].WeaponClass = WeaponInstance.WeaponClass;
+				Character->Inventory[i].AmmoMagazine = WeaponInstance.AmmoMagazine;
+				Character->Inventory[i].AmmoInventory = WeaponInstance.AmmoInventory;
+
+				Character->SwitchWeapon(i);
+
+				if (bDestroyedAfterPickup)
+				{
+					DestroyPickUp();
+				}
+
+				return;
+			}		
+		}
 	}
 }
 

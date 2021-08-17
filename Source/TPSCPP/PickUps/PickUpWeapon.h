@@ -25,7 +25,7 @@ public:
 	class AWeaponBase* Weapon;
 
 	/**Does the weapon mesh simulate physics?*/
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Pick-up")
+	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite, Category = "Pick-up")
 	bool bWeaponMeshSimulatesPhysics;
 
 public:
@@ -37,4 +37,6 @@ protected:
 
 public:
 	virtual void DestroyPickUp() override;
+
+	virtual void OnInteracted(ACharacterBase* Character) override;
 };
