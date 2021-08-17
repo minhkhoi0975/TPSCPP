@@ -32,6 +32,10 @@ void APickUpWeapon::OnConstruction(const FTransform& Transform)
 			{
 				Weapon->EnableSimulatePhysics();
 			}
+			else
+			{
+				Weapon->DisableSimulatePhysics();
+			}
 
 			FAttachmentTransformRules AttachmentTransformRules(EAttachmentRule::SnapToTarget, EAttachmentRule::SnapToTarget, EAttachmentRule::SnapToTarget, true);
 			Weapon->AttachToActor(this, AttachmentTransformRules);
