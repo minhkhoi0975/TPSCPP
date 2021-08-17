@@ -213,4 +213,9 @@ public:
 	void EnableSimulatePhysics();
 	bool EnableSimulatePhysics_Validate();
 	void EnableSimulatePhysics_Implementation();
+
+	UFUNCTION(BlueprintCallable, NetMulticast, Reliable, WithValidation)
+	void DisableSimulatePhysics();
+	bool DisableSimulatePhysics_Validate();
+	void DisableSimulatePhysics_Implementation();
 };

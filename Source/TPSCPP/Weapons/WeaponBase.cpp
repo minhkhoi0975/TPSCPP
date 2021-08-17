@@ -26,6 +26,10 @@ AWeaponBase::AWeaponBase()
 
 	// Gun mesh
 	GunMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Gun Mesh"));
+	GunMesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Overlap);
+	GunMesh->SetCollisionEnabled(ECollisionEnabled::Type::QueryOnly);
+	GunMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Block);
+	GunMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Block);
 
 	// Muzzle
 	Muzzle = CreateAbstractDefaultSubobject<USphereComponent>(TEXT("Muzzle"));
@@ -361,5 +365,18 @@ void AWeaponBase::EnableSimulatePhysics_Implementation()
 	GunMesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Block);
 	GunMesh->SetCollisionEnabled(ECollisionEnabled::Type::QueryAndPhysics);
 	GunMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Ignore); // Don't let the character move the weapon.
+}
+
+bool AWeaponBase::DisableSimulatePhysics_Validate()
+{
+	return true;
+}
+
+void AWeaponBase::DisableSimulatePhysics_Implementation()
+{
+	GunMesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Overlap);
+	GunMesh->SetCollisionEnabled(ECollisionEnabled::Type::QueryOnly);
+	GunMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Block);
+	GunMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Block);
 }
 
