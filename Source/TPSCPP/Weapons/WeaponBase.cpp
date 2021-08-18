@@ -28,7 +28,7 @@ AWeaponBase::AWeaponBase()
 	GunMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Gun Mesh"));
 	GunMesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Overlap);
 	GunMesh->SetCollisionEnabled(ECollisionEnabled::Type::QueryOnly);
-	GunMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Block);
+	GunMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Overlap);
 	GunMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Block);
 
 	// Muzzle
@@ -374,9 +374,10 @@ bool AWeaponBase::DisableSimulatePhysics_Validate()
 
 void AWeaponBase::DisableSimulatePhysics_Implementation()
 {
+	GunMesh->SetSimulatePhysics(false);
 	GunMesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Overlap);
 	GunMesh->SetCollisionEnabled(ECollisionEnabled::Type::QueryOnly);
-	GunMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Block);
+	GunMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Overlap);
 	GunMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Block);
 }
 
