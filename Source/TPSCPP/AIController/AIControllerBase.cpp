@@ -2,6 +2,7 @@
 
 
 #include "AIControllerBase.h"
+#include "Engine/Engine.h"
 #include "Perception/AIPerceptionComponent.h"
 #include "Perception/AIPerceptionStimuliSourceComponent.h"
 #include "Perception/AISenseConfig_Sight.h"
@@ -10,8 +11,10 @@
 #include "Perception/AISense_Sight.h"
 #include "Perception/AISense_Hearing.h"
 #include "BehaviorTree/BehaviorTree.h"
+#include "BehaviorTree/BlackboardComponent.h"
+#include "UObject/ConstructorHelpers.h"
 
-AAIControllerBase::AAIControllerBase() : Super()
+AAIControllerBase::AAIControllerBase(): Super()
 {
 	// Configure AI Perception
 	AIPerception = CreateDefaultSubobject<UAIPerceptionComponent>(TEXT("AI_Perception"));
@@ -40,6 +43,20 @@ AAIControllerBase::AAIControllerBase() : Super()
 
 	// Set dominant sense
 	AIPerception->SetDominantSense(AISightConfig->GetSenseImplementation());
+
+	// Set behavior tree
+	static ConstructorHelpers::FObjectFinder<UBehaviorTree> BehaviorTreeAsset(TEXT("/Game/MyAssets/AI/AIBehaviorTree"));
+	if (BehaviorTreeAsset.Succeeded())
+	{
+		BehaviorTree = BehaviorTreeAsset.Object;
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Cannot find /Game/MyAssets/AI/AIBehaviorTree"));
+	}
+
+	// OnTargetPerceptionUpdated event
+	AIPerception->OnTargetPerceptionUpdated.AddDynamic(this, &AAIControllerBase::OnTargetPerceptionUpdated);
 }
 
 void AAIControllerBase::BeginPlay()
@@ -48,5 +65,23 @@ void AAIControllerBase::BeginPlay()
 	if (IsValid(BehaviorTree))
 	{
 		RunBehaviorTree(BehaviorTree);
+		
+	}
+}
+
+void AAIControllerBase::OnTargetPerceptionUpdated(AActor* Actor, FAIStimulus Stimulus)
+{
+	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Cyan, "I sense something...");
+
+	UBlackboardComponent* BlackBoardComponent = GetBlackboardComponent();
+	if (IsValid(BlackBoardComponent) && IsValid(Actor))
+	{
+		BlackBoardComponent->SetValueAsObject("SeenActor", Actor);
+		BlackBoardComponent->SetValueAsVector("SeenActorLastKnownLocation", Actor->GetActorLocation());
+		BlackBoardComponent->SetValueAsBool("bCanSeeActor", Stimulus.WasSuccessfullySensed());
+	}
+	else
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, "Error: Blackboard component not found");
 	}
 }
