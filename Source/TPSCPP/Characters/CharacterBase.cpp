@@ -32,14 +32,14 @@ ACharacterBase::ACharacterBase(): Super()
 	// Capsule Component
 	CharacterCapsuleComponent = GetCapsuleComponent();
 	CharacterCapsuleComponent->InitCapsuleSize(34.0f, 88.0f);
-	CharacterCapsuleComponent->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Block);
-	CharacterCapsuleComponent->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Block);
+	CharacterCapsuleComponent->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Overlap);
+	CharacterCapsuleComponent->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Overlap);
 
 	// Skeletal Mesh
 	CharacterMeshComponent = GetMesh();
 	CharacterMeshComponent->RelativeLocation = FVector(0.0f, 0.0f, -90.0f);
 	CharacterMeshComponent->RelativeRotation = FRotator(0.0f, -90.0f, 0.0f);
-	CharacterMeshComponent->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Block);
+	CharacterMeshComponent->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Overlap);
 	CharacterMeshComponent->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Block);
 
 	// Set mesh and animation for CharacterMeshComponent
