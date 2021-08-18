@@ -83,8 +83,13 @@ ACharacterBase::ACharacterBase(): Super()
 	MeshVisibility->RelativeLocation = FVector(-6.85f, 0.0f, 0.0f);
 	MeshVisibility->SetSphereRadius(12.0f);
 
-	// Weapon inventory.
-	Inventory.SetNum(4);    // Each character can carry up to 4 weapons.
+	// Movement component.
+	UCharacterMovementComponent* CharacterMovementComponent = GetCharacterMovement();
+	CharacterMovementComponent->RotationRate = FRotator(0.0f, 180.0f, 0.0f);
+	CharacterMovementComponent->bUseControllerDesiredRotation = true;
+
+	// Disable this so that AI does not make sharp rotation.
+	bUseControllerRotationYaw = false;
 
 	// Configure AI Perception Stimuli Source
 	AIPerceptionStimuliSource = CreateDefaultSubobject<UAIPerceptionStimuliSourceComponent>(TEXT("AI_StimuliSource"));
@@ -95,6 +100,9 @@ ACharacterBase::ACharacterBase(): Super()
 
 	// Set AI Controller class
 	AIControllerClass = TSubclassOf<ACharacterAIController>();
+
+	// Weapon inventory.
+	Inventory.SetNum(4);    // Each character can carry up to 4 weapons.
 
 	// Enable replication
 	SetReplicates(true);

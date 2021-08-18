@@ -61,17 +61,22 @@ AAIControllerBase::AAIControllerBase(): Super()
 
 void AAIControllerBase::BeginPlay()
 {
+	Super::BeginPlay();
+
 	// Run the behavior tree.
-	if (IsValid(BehaviorTree))
+	if (IsValid(BehaviorTree) && RunBehaviorTree(BehaviorTree))
 	{
-		RunBehaviorTree(BehaviorTree);
-		
+		UE_LOG(LogTemp, Display, TEXT("Behavior tree starts running."));
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("Cannot run behavior tree."));
 	}
 }
 
 void AAIControllerBase::OnTargetPerceptionUpdated(AActor* Actor, FAIStimulus Stimulus)
 {
-	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Cyan, "I sense something...");
+	//GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Cyan, "I sense something...");
 
 	UBlackboardComponent* BlackBoardComponent = GetBlackboardComponent();
 	if (IsValid(BlackBoardComponent) && IsValid(Actor))
