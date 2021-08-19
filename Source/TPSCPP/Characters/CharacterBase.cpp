@@ -108,6 +108,27 @@ ACharacterBase::ACharacterBase(): Super()
 	SetReplicates(true);
 }
 
+EFactionAttitude ACharacterBase::GetAttitudeTowardsCharacter(const ACharacterBase* OtherCharacter) const
+{
+	if (IsValid(OtherCharacter))
+	{
+		if (this->Faction == OtherCharacter->Faction)
+		{
+			return EFactionAttitude::Ally;
+		}
+		else if (this->Faction == EFaction::Neutral || OtherCharacter->Faction == EFaction::Neutral)
+		{
+			return EFactionAttitude::Neutral;
+		}
+		else
+		{
+			return EFactionAttitude::Enemy;
+		}
+	}
+
+	return EFactionAttitude::Neutral;
+}
+
 // Called when the game starts or when spawned
 void ACharacterBase::BeginPlay()
 {

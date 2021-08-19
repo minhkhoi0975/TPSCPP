@@ -10,10 +10,32 @@
 #include "Weapons/WeaponBase.h"
 #include "CharacterBase.generated.h"
 
+/**
+ * Factions
+ */
+UENUM(BlueprintType)
+enum class EFaction : uint8
+{
+	Neutral,
+	Green,
+	Yellow
+};
+
+/**
+ * Attitude towards faction
+ */
+UENUM(BlueprintType)
+enum class EFactionAttitude : uint8
+{
+	Enemy,
+	Neutral,
+	Ally
+};
+
 #define GetCharacterFlag(CharacterFlag) static_cast<uint8>(CharacterFlag)
 
 /**
- * Character Flags
+ * Character flags
  */
 UENUM(BlueprintType, Meta = (Bitflags))
 enum class ECharacterFlags : uint8
@@ -25,6 +47,9 @@ enum class ECharacterFlags : uint8
 	END
 };
 
+/**
+ * Character class
+ */
 UCLASS(Blueprintable)
 class TPSCPP_API ACharacterBase : public ACharacter, public IAISightTargetInterface
 {
@@ -59,6 +84,10 @@ public:
 	ACharacterBase();
 
 public:	
+	/** The faction this character belongs to.*/
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Faction")
+	EFaction Faction = EFaction::Neutral;
+
 	/** Maximum amount of health this character can have.*/
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Health")
 	float HealthMax = 100;
@@ -96,16 +125,10 @@ public:
 	/** Flags*/
 	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadWrite, Category = "AnimationStatus", Meta = (Bitmask, BitmaskEnum = ECharacterFlags))
 	uint8 CharacterFlags;
-    
 
-protected:
-	// Called when the game starts or when spawned
-	virtual void BeginPlay() override;
-
-	// Required for replication
-	void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
-
-	// Inputs
+	/** 
+	 *   Inputs 
+	 */
 protected:
 	// Movements
 	void InputMoveForward(float Value);
@@ -165,7 +188,6 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void SaveCurrentWeaponInfo();
 
-	
 	UFUNCTION(BlueprintCallable, Server, Reliable, WithValidation)
 	void Interact();
 	bool Interact_Validate();
@@ -177,7 +199,9 @@ public:
 	void DropWeapon_Implementation();
 
 
-	// Animation Replication
+	/** 
+	 *   Animation Replication 
+	 */
 public:
 	void ReplicateControlRotation();
 
@@ -215,12 +239,24 @@ public:
 	bool ReplicateAnimMontageJumpToSection_Validate(FName SectionName, const UAnimMontage* AnimMontage);
 	void ReplicateAnimMontageJumpToSection_Implementation(FName SectionName, const UAnimMontage* AnimMontage);
 
-protected:
 	// Mesh Visibility Overlap Events
+protected:
 	UFUNCTION()
 	void OnMeshVisibilityBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 	UFUNCTION()
 	void OnMeshVisibilityEndOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
+
+	// Get attitude towards a character.
+public:	
+	UFUNCTION(BlueprintCallable)
+	EFactionAttitude GetAttitudeTowardsCharacter(const ACharacterBase* OtherCharacter) const;
+
+protected:
+	// Called when the game starts or when spawned
+	virtual void BeginPlay() override;
+
+	// Required for replication
+	void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 public:	
 	// Called every frame
