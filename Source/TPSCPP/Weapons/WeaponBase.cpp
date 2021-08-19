@@ -182,7 +182,7 @@ void AWeaponBase::Fire_Implementation()
 			StartLocation = GunMesh->GetSocketLocation("Muzzle");
 
 			// Get forward vector and "bend" it to become firing direction.
-			FiringDirection = GetActorForwardVector();
+			FiringDirection = GetActorRightVector();
 			FiringDirection = UKismetMathLibrary::RandomUnitVectorInConeInRadians(FiringDirection, BulletSpreadAngleRad);
 
 			// Find end point.
