@@ -89,14 +89,37 @@ FVector AAIControllerBase::GetFocalPointOnActor(const AActor* Actor) const
 
 void AAIControllerBase::OnTargetPerceptionUpdated(AActor* Actor, FAIStimulus Stimulus)
 {
-	//GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Cyan, "I sense something...");
+    //GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Cyan, "I sense something...");
+
+	// Get character controlled by this AI controller.
+	ACharacterBase* ControlledCharacter = Cast<ACharacterBase>(GetCharacter());
+	if (!IsValid(ControlledCharacter))
+	{
+		return;
+	}
+
 
 	UBlackboardComponent* BlackBoardComponent = GetBlackboardComponent();
 	if (IsValid(BlackBoardComponent) && IsValid(Actor))
 	{
-		BlackBoardComponent->SetValueAsObject("SeenActor", Actor);
-		BlackBoardComponent->SetValueAsVector("SeenActorLastKnownLocation", Actor->GetActorLocation());
-		BlackBoardComponent->SetValueAsBool("bCanSeeActor", Stimulus.WasSuccessfullySensed());
+		// Check if the actor is a character.
+		ACharacterBase* OtherCharacter = Cast<ACharacterBase>(Actor);
+		if (IsValid(OtherCharacter))
+		{
+			switch (ControlledCharacter->GetAttitudeTowardsCharacter(OtherCharacter))
+			{
+			case EFactionAttitude::Enemy:
+				BlackBoardComponent->SetValueAsObject("SeenEnemy", Actor);
+				BlackBoardComponent->SetValueAsVector("SeenEnemyLastKnownLocation", Stimulus.StimulusLocation);
+				BlackBoardComponent->SetValueAsBool("bCanSeeEnemy", Stimulus.WasSuccessfullySensed());
+				UE_LOG(LogTemp, Display, TEXT("Enemy Found."));
+			case EFactionAttitude::Ally:
+				UE_LOG(LogTemp, Display, TEXT("Ally Found."));
+			default:
+				UE_LOG(LogTemp, Display, TEXT("Neutral Found."));
+			}
+			
+		}
 	}
 	else
 	{
