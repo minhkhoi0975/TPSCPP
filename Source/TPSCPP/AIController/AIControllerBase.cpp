@@ -2,6 +2,7 @@
 
 
 #include "AIControllerBase.h"
+#include "Characters/CharacterBase.h"
 #include "Engine/Engine.h"
 #include "Perception/AIPerceptionComponent.h"
 #include "Perception/AIPerceptionStimuliSourceComponent.h"
@@ -72,6 +73,18 @@ void AAIControllerBase::BeginPlay()
 	{
 		UE_LOG(LogTemp, Error, TEXT("Cannot run behavior tree."));
 	}
+}
+
+FVector AAIControllerBase::GetFocalPointOnActor(const AActor* Actor) const
+{
+	// Check if the actor is a character. If it does, get the half height of the capsule component.
+	if (Actor->IsA(ACharacterBase::StaticClass()))
+	{
+		return Actor->GetActorLocation() + FVector(0.0f, 0.0f, 88.0f);
+	}
+
+	// Otherwise, return the location of the character's pivot point.
+	return Actor->GetActorLocation();
 }
 
 void AAIControllerBase::OnTargetPerceptionUpdated(AActor* Actor, FAIStimulus Stimulus)

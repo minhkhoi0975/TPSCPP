@@ -29,6 +29,8 @@ public:
 protected:
 	virtual void BeginPlay() override;
 
+	virtual FVector GetFocalPointOnActor(const AActor* Actor) const override;
+
 	UFUNCTION()
 	void OnTargetPerceptionUpdated(AActor* Actor, FAIStimulus Stimulus);
 };
