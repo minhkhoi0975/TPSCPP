@@ -17,6 +17,7 @@
 #include "Net/UnrealNetwork.h"
 #include "Curves/CurveFloat.h"
 #include "DrawDebugHelpers.h"
+#include "Engine/EngineTypes.h"
 
 // Sets default values
 AWeaponBase::AWeaponBase()
@@ -202,7 +203,15 @@ void AWeaponBase::Fire_Implementation()
 		DrawDebugLine(GetWorld(), StartLocation, EndLocation, FColor::Red, false, 5.0f);
 		if (Hit)
 		{
-			// TODO: Apply damage to hit actor.
+			// Apply damage to the hit actor.
+			AActor* HitActor = HitResult.GetActor();
+			if (IsValid(HitActor))
+			{
+				// Get the controller of the character that fires this weapon.
+				UGameplayStatics::ApplyPointDamage(HitActor, DamageBase, FiringDirection, HitResult, GetInstigatorController(), this, TSubclassOf<UDamageType>());
+			}
+
+			// IF the hit actor is simulating physics, add impulse to it.
 			UPrimitiveComponent* HitComponent = HitResult.GetComponent();
 			if (IsValid(HitComponent) && HitComponent->IsSimulatingPhysics())
 			{
@@ -210,9 +219,9 @@ void AWeaponBase::Fire_Implementation()
 				HitComponent->AddImpulse(Impulse, HitResult.BoneName, true);
 			}
 
+			// Spawn impact particle effect.
 			FVector ImpactLocation = HitResult.ImpactPoint;
 			FRotator ImpactRotator = FRotationMatrix::MakeFromX(HitResult.ImpactNormal).Rotator();
-
 			FTransform ImpactTransform = FTransform(ImpactRotator, ImpactLocation);
 			PlayEffect(EffectImpact, ImpactTransform);
 		}

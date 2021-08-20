@@ -59,6 +59,10 @@ public:
 	AWeaponBase();
 
 public:
+	/** The base damage of the gun*/
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Damage")
+	float DamageBase = 15.0f;
+
 	/**The maximum number of bullets in each magazine.*/
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ammo")
 	int AmmoMagazineMax = 30;
