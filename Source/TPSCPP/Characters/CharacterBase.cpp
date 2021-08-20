@@ -134,12 +134,12 @@ void ACharacterBase::BeginPlay()
 {
 	Super::BeginPlay();
 
+	// Enable crouching
+	GetCharacterMovement()->GetNavAgentPropertiesRef().bCanCrouch = true;
+
 	// Bind overlap events to MeshVisibility.
 	MeshVisibility->OnComponentBeginOverlap.AddDynamic(this, &ACharacterBase::OnMeshVisibilityBeginOverlap);
 	MeshVisibility->OnComponentEndOverlap.AddDynamic(this, &ACharacterBase::OnMeshVisibilityEndOverlap);
-	
-	// Enable crouching
-	GetCharacterMovement()->GetNavAgentPropertiesRef().bCanCrouch = true;
 }
 
 void ACharacterBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -577,6 +577,24 @@ void ACharacterBase::OnMeshVisibilityEndOverlap(UPrimitiveComponent* OverlappedC
 	}
 
 	//UE_LOG(LogTemp, Display, TEXT("End overlap"));
+}
+
+float ACharacterBase::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
+{
+	FHitResult HitResult;
+	FVector ImpulseDirection;
+	DamageEvent.GetBestHitInfo(this, EventInstigator, HitResult, ImpulseDirection);
+
+	if (HitResult.BoneName == "head" || HitResult.BoneName == "neck_01")
+	{
+		DamageAmount *= 10.0f;
+	}
+
+	HealthCurrent -= DamageAmount;
+
+	UE_LOG(LogTemp, Display, TEXT("Hit"));
+
+	return DamageAmount;
 }
 
 // Called every frame
