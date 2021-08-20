@@ -194,9 +194,9 @@ public:
 	void Interact_Implementation();
 
 	UFUNCTION(BlueprintCallable, Server, Reliable, WithValidation)
-	void DropWeapon();
-	bool DropWeapon_Validate();
-	void DropWeapon_Implementation();
+	void DropWeapon(bool SwitchWeapon = true);
+	bool DropWeapon_Validate(bool SwitchWeapon = true);
+	void DropWeapon_Implementation(bool SwitchWeapon = true);
 
 
 	/** 
@@ -262,7 +262,18 @@ protected:
 	 *   Damage
 	 */
 public:
+	UFUNCTION(BlueprintCallable)
 	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
+
+	UFUNCTION(BlueprintCallable)
+	void Die(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser);
+
+	UFUNCTION(BlueprintCallable, NetMulticast, Reliable, WithValidation)
+	void EnableRagdoll(float DamageAmount, struct FDamageEvent const& DamageEvent);
+	bool EnableRagdoll_Validate(float DamageAmount, struct FDamageEvent const& DamageEvent);
+	void EnableRagdoll_Implementation(float DamageAmount, struct FDamageEvent const& DamageEvent);
+
+
 
 public:	
 	// Called every frame

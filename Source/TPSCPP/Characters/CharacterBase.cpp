@@ -501,12 +501,12 @@ void ACharacterBase::Interact_Implementation()
 	}
 }
 
-bool ACharacterBase::DropWeapon_Validate()
+bool ACharacterBase::DropWeapon_Validate(bool SwitchWeapon)
 {
 	return true;
 }
 
-void ACharacterBase::DropWeapon_Implementation()
+void ACharacterBase::DropWeapon_Implementation(bool SwitchWeapon)
 {
 	if (IsValid(WeaponCurrent))
 	{
@@ -535,12 +535,15 @@ void ACharacterBase::DropWeapon_Implementation()
 		WeaponCurrent->Destroy();
 
 		// Automatically switch weapon.
-		for (int i = 0; i < Inventory.Num(); i++)
+		if (SwitchWeapon)
 		{
-			if (Inventory[i].WeaponClass)
+			for (int i = 0; i < Inventory.Num(); i++)
 			{
-				SwitchWeapon(i);
-				return;
+				if (Inventory[i].WeaponClass)
+				{
+					this->SwitchWeapon(i);
+					return;
+				}
 			}
 		}
 	}
@@ -591,10 +594,49 @@ float ACharacterBase::TakeDamage(float DamageAmount, FDamageEvent const& DamageE
 	}
 
 	HealthCurrent -= DamageAmount;
+	if (HealthCurrent <= 0.0f)
+	{
+		Die(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
+	}
 
 	UE_LOG(LogTemp, Display, TEXT("Hit"));
 
 	return DamageAmount;
+}
+
+void ACharacterBase::Die(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser)
+{
+	if (HasAuthority())
+	{
+		DropWeapon(false);
+
+		EnableRagdoll(DamageAmount, DamageEvent);
+
+		DetachFromControllerPendingDestroy();
+
+		SetLifeSpan(5.0f);
+	}
+}
+
+bool ACharacterBase::EnableRagdoll_Validate(float DamageAmount, FDamageEvent const& DamageEvent)
+{
+	return true;
+}
+
+void ACharacterBase::EnableRagdoll_Implementation(float DamageAmount, FDamageEvent const& DamageEvent)
+{
+	// Make character mesh simulate physics.
+	CharacterMeshComponent->SetAllBodiesSimulatePhysics(true);
+	CharacterMeshComponent->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+
+	// Apply impulse to the character.
+	FHitResult HitResult;
+	FVector ImpulseDirection;
+	DamageEvent.GetBestHitInfo(this, nullptr, HitResult, ImpulseDirection);
+	CharacterMeshComponent->AddImpulse(DamageAmount * ImpulseDirection, HitResult.BoneName, true);
+
+	// Disable collision of capsule component.
+	CharacterCapsuleComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 }
 
 // Called every frame
