@@ -16,7 +16,7 @@
 #include "Perception/AIPerceptionStimuliSourceComponent.h"
 #include "Perception/AISense_Sight.h"
 #include "Perception/AISense_Hearing.h"
-#include "AIController/CharacterAIController.h"
+#include "AIController/AIControllerBase.h"
 #include "Engine/World.h"
 #include "UObject/ConstructorHelpers.h"
 #include "Animation/AnimInstance.h"
@@ -99,7 +99,7 @@ ACharacterBase::ACharacterBase(): Super()
 	AIPerceptionStimuliSource->RegisterWithPerceptionSystem();
 
 	// Set AI Controller class
-	AIControllerClass = TSubclassOf<ACharacterAIController>();
+	AIControllerClass = TSubclassOf<AAIControllerBase>();
 
 	// Weapon inventory.
 	Inventory.SetNum(4);    // Each character can carry up to 4 weapons.
@@ -519,10 +519,12 @@ void ACharacterBase::DropWeapon_Implementation(bool SwitchWeapon)
 		APickUpWeapon* PickUpWeapon = GetWorld()->SpawnActorDeferred<APickUpWeapon>(APickUpWeapon::StaticClass(), GetActorTransform());
 		if (IsValid(PickUpWeapon))
 		{
+			PickUpWeapon->SetActorRotation(FRotator(90.0f, PickUpWeapon->GetActorRotation().Yaw, 0.0f));
 			PickUpWeapon->WeaponInstance.WeaponClass = WeaponCurrent->GetClass();
 			PickUpWeapon->WeaponInstance.AmmoMagazine = WeaponCurrent->AmmoMagazine;
 			PickUpWeapon->WeaponInstance.AmmoInventory = WeaponCurrent->AmmoInventory;
 			PickUpWeapon->bWeaponMeshSimulatesPhysics = true;
+			PickUpWeapon->Age = 60.0f;
 
 			PickUpWeapon->FinishSpawning(PickUpWeapon->GetActorTransform());
 		}
