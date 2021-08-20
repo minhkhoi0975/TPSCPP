@@ -17,6 +17,8 @@ class TPSCPP_API APlayerControllerBase : public APlayerController
 protected:
 	virtual void BeginPlay() override;
 
+	virtual void SetupInputComponent() override;
+
 public:
 	APlayerControllerBase();
 
@@ -26,4 +28,12 @@ public:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "HUD")
 	TSubclassOf<UUserWidget> HUDClass;
+
+public:
+	void InputRespawn();
+
+	UFUNCTION(BlueprintCallable, Server, Reliable, WithValidation)
+	void Respawn();
+	bool Respawn_Validate();
+	void Respawn_Implementation();
 };
