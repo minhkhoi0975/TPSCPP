@@ -23,6 +23,8 @@ void UEnvQueryContextEnemy::ProvideContext(FEnvQueryInstance& QueryInstance, FEn
 			{
 				UEnvQueryItemType_Actor::SetContextHelper(ContextData, Enemy);
 			}
+
+			UE_LOG(LogTemp, Display, TEXT("Enemy context"));
 		}
 	}
 }
