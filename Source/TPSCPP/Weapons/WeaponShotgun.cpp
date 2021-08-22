@@ -9,6 +9,7 @@
 #include "DrawDebugHelpers.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "Kismet/GameplayStatics.h"
+#include "Perception/AISense_Hearing.h"
 
 void AWeaponShotgun::Fire_Implementation()
 {
@@ -73,7 +74,7 @@ void AWeaponShotgun::Fire_Implementation()
 			// Line trace.
 			FHitResult HitResult;
 			bool Hit = GetWorld()->LineTraceSingleByChannel(HitResult, StartLocation, EndLocation, ECollisionChannel::ECC_Visibility, CollisionQuerryParams);
-			DrawDebugLine(GetWorld(), StartLocation, EndLocation, FColor::Red, false, 5.0f);
+			//DrawDebugLine(GetWorld(), StartLocation, EndLocation, FColor::Red, false, 5.0f);
 			if (Hit)
 			{
 				// Apply damage to the hit actor.
@@ -116,6 +117,9 @@ void AWeaponShotgun::Fire_Implementation()
 
 		// Play shooting sound.
 		PlayShootingSound();
+
+		// Report noise event.
+		UAISense_Hearing::ReportNoiseEvent(GetWorld(), GetActorLocation(), 1.0f, IsValid(CarryingCharacter) ? CarryingCharacter : nullptr, 0.0f, FName("Noise"));
 
 		// Play muzzle flash effect.
 		FTransform MuzzleFlashTransform = GunMesh->GetSocketTransform("Muzzle");
