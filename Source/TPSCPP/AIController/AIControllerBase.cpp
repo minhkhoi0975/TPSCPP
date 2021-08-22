@@ -12,6 +12,7 @@
 #include "Perception//AISenseConfig_Damage.h"
 #include "Perception/AISense_Sight.h"
 #include "Perception/AISense_Hearing.h"
+#include "Perception/AIPerceptionSystem.h"
 #include "BehaviorTree/BehaviorTree.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "UObject/ConstructorHelpers.h"
@@ -121,13 +122,26 @@ void AAIControllerBase::OnTargetPerceptionUpdated(AActor* Actor, FAIStimulus Sti
 		{
 			switch (ControlledCharacter->GetAttitudeTowardsCharacter(OtherCharacter))
 			{
-			case EFactionAttitude::Enemy:
-				BlackBoardComponent->SetValueAsObject("SeenEnemy", Actor);
-				BlackBoardComponent->SetValueAsVector("SeenEnemyLastKnownLocation", Stimulus.StimulusLocation);
-				BlackBoardComponent->SetValueAsBool("bCanSeeEnemy", Stimulus.WasSuccessfullySensed());
+			case EFactionAttitude::Enemy:		
+				if (UAIPerceptionSystem::GetSenseClassForStimulus(GetWorld(), Stimulus) == UAISense_Sight::StaticClass())
+				{
+					BlackBoardComponent->SetValueAsObject("SeenEnemy", Actor);
+					BlackBoardComponent->SetValueAsVector("SeenEnemyLastKnownLocation", Stimulus.StimulusLocation);
+					BlackBoardComponent->SetValueAsBool("bCanSeeEnemy", Stimulus.WasSuccessfullySensed());
+				}
+				else if (UAIPerceptionSystem::GetSenseClassForStimulus(GetWorld(), Stimulus) == UAISense_Hearing::StaticClass())
+				{
+					BlackBoardComponent->SetValueAsVector("StrangeNoiseLocation", Stimulus.StimulusLocation);
+					BlackBoardComponent->SetValueAsBool("bCanHearStrangeNoise", Stimulus.WasSuccessfullySensed());
+				}
+
 				UE_LOG(LogTemp, Display, TEXT("Enemy Found."));
+
+
 			case EFactionAttitude::Ally:
 				UE_LOG(LogTemp, Display, TEXT("Ally Found."));
+
+
 			default:
 				UE_LOG(LogTemp, Display, TEXT("Neutral Found."));
 			}
