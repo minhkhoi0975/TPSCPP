@@ -21,15 +21,6 @@ ACharacterSpawner::ACharacterSpawner(): Super()
 		Dummy->SetSkeletalMesh(SkeletalMesh.Object);
 	}
 
-	/*
-	// Behavior Tree.
-	static ConstructorHelpers::FObjectFinder<UBehaviorTree> BehaviorTree(TEXT("/Game/MyAssets/AI/AIBehaviorTree"));
-	if (BehaviorTree.Succeeded())
-	{
-		this->BehaviorTree = BehaviorTree.Object;
-	}
-	*/
-
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = false;
 

@@ -16,6 +16,10 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
 	class USkeletalMeshComponent* Dummy;
 
+protected:
+	//UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
+	FTimerHandle SpawnTimerHandle;
+
 public:
 	/**The template of spawned NPCs.*/
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
@@ -33,9 +37,6 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	class AAIPath* AIPath;
 
-	//UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
-	FTimerHandle SpawnTimerHandle;
-	
 public:	
 	// Sets default values for this actor's properties
 	ACharacterSpawner();
@@ -45,6 +46,5 @@ protected:
 	virtual void BeginPlay() override;
 
 public:
-	// UFUNCTION(BlueprintCallable)
 	void SpawnNPC();
 };
