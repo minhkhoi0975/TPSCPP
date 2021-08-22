@@ -2,6 +2,7 @@
 
 
 #include "AIControllerBase.h"
+#include "AIPath.h"
 #include "Characters/CharacterBase.h"
 #include "Engine/Engine.h"
 #include "Perception/AIPerceptionComponent.h"
@@ -67,7 +68,19 @@ void AAIControllerBase::BeginPlay()
 	// Run the behavior tree.
 	if (IsValid(BehaviorTree) && RunBehaviorTree(BehaviorTree))
 	{
-		UE_LOG(LogTemp, Display, TEXT("Behavior tree starts running."));
+		ACharacterBase* Character = Cast<ACharacterBase>(GetPawn());
+		if (IsValid(Character))
+		{
+			AAIPath* AIPath = Character->AIPath;
+
+			if (IsValid(AIPath))
+			{
+				UBlackboardComponent* BlackBoard = GetBlackboardComponent();
+				
+				BlackBoard->SetValueAsEnum("PatrolPathType", (uint8)AIPath->Type);
+				BlackBoard->SetValueAsInt("PatrolPathDirection", 1);
+			}
+		}
 	}
 	else
 	{
