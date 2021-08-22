@@ -8,6 +8,7 @@
 #include "Components/TimelineComponent.h"
 #include "Animation/AnimMontage.h"
 #include "Weapons/WeaponBase.h"
+#include "AIController/AIPath.h"
 #include "CharacterBase.generated.h"
 
 /**
@@ -84,6 +85,10 @@ public:
 	ACharacterBase();
 
 public:	
+	/** If this character is controlled by AI, this is the path the character travels along.*/
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI")
+	AAIPath* AIPath;
+
 	/** The faction this character belongs to.*/
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Faction")
 	EFaction Faction = EFaction::Neutral;
