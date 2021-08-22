@@ -471,7 +471,7 @@ void ACharacterBase::Interact_Implementation()
 
 	FHitResult HitResult;
 	bool Hit = GetWorld()->LineTraceSingleByChannel(HitResult, StartLocation, EndLocation, ECollisionChannel::ECC_Visibility, CollisionQuerryParams);
-	DrawDebugLine(GetWorld(), StartLocation, EndLocation, FColor::Green, false, 5.0f);
+	//DrawDebugLine(GetWorld(), StartLocation, EndLocation, FColor::Green, false, 5.0f);
 
 	AActor* HitActor = HitResult.GetActor();
 
