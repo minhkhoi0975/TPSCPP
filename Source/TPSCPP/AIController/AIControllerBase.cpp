@@ -81,6 +81,10 @@ void AAIControllerBase::BeginPlay()
 				BlackBoard->SetValueAsEnum("PatrolPathType", (uint8)AIPath->Type);
 				BlackBoard->SetValueAsInt("PatrolPathDirection", 1);
 			}
+			else
+			{
+				UE_LOG(LogTemp, Display, TEXT("AI path is not set."));
+			}
 		}
 	}
 	else
