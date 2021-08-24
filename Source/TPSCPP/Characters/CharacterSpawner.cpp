@@ -7,6 +7,7 @@
 #include "UObject/ConstructorHelpers.h"
 #include "TimerManager.h"
 #include "Blueprint/AIBlueprintHelperLibrary.h"
+#include "BehaviorTree/BlackboardComponent.h"
 
 // Sets default values
 ACharacterSpawner::ACharacterSpawner(): Super()
@@ -45,6 +46,13 @@ void ACharacterSpawner::SpawnNPC()
 	if (IsValid(Character))
 	{
 		Character->AIPath = AIPath;
+
+		UBlackboardComponent* BlackBoard = UAIBlueprintHelperLibrary::GetBlackboard(Character);
+		if (IsValid(BlackBoard))
+		{
+			BlackBoard->SetValueAsEnum("PatrolPathType", (uint8)AIPath->Type);
+			BlackBoard->SetValueAsInt("PatrolPathDirection", 1);
+		}
 	}
 }
 
