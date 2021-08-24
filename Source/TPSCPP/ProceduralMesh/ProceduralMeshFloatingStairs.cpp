@@ -5,7 +5,12 @@
 
 void AProceduralMeshFloatingStairs::GenerateMesh()
 {
-	// Fix the number of steps
+	// Fix the size.
+	Size.X = UKismetMathLibrary::Abs(Size.X);
+	Size.Y = UKismetMathLibrary::Abs(Size.Y);
+	Size.Z = UKismetMathLibrary::Abs(Size.Z);
+
+	// Fix the number of steps.
 	if (NumberOfSteps <= 0)
 	{
 		NumberOfSteps = 1;

@@ -5,6 +5,11 @@
 
 void AProceduralMeshCube::GenerateMesh()
 {
+	// Fix the size.
+	Size.X = UKismetMathLibrary::Abs(Size.X);
+	Size.Y = UKismetMathLibrary::Abs(Size.Y);
+	Size.Z = UKismetMathLibrary::Abs(Size.Z);
+
 	// Define vertices.
 	TArray<FVector> UniqueVertices;
 	UniqueVertices.Add(FVector(0.0f, 0.0f, 0.0f));
