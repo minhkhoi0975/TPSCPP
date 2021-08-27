@@ -30,6 +30,7 @@ void APlayerControllerBase::SetupInputComponent()
 	Super::SetupInputComponent();
 
 	InputComponent->BindAction("Respawn", EInputEvent::IE_Pressed, this, &APlayerControllerBase::InputRespawn);
+	InputComponent->BindAction("RestartLevel", EInputEvent::IE_Pressed, this, &APlayerControllerBase::InputRestartLevel);
 }
 
 APlayerControllerBase::APlayerControllerBase():Super()
@@ -48,6 +49,15 @@ APlayerControllerBase::APlayerControllerBase():Super()
 void APlayerControllerBase::InputRespawn()
 {
 	Respawn();
+}
+
+void APlayerControllerBase::InputRestartLevel()
+{
+	if (HasAuthority())
+	{
+		FString CurrentLevelName = UGameplayStatics::GetCurrentLevelName(GetWorld());
+		UGameplayStatics::OpenLevel(GetWorld(), FName(*CurrentLevelName));
+	}
 }
 
 bool APlayerControllerBase::Respawn_Validate()

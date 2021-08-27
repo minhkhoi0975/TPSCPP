@@ -31,6 +31,7 @@ public:
 
 public:
 	void InputRespawn();
+	void InputRestartLevel();
 
 	UFUNCTION(BlueprintCallable, Server, Reliable, WithValidation)
 	void Respawn();
