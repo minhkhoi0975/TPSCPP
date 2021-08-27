@@ -12,10 +12,6 @@ UCLASS()
 class TPSCPP_API APickUpBase : public AActor, public IInteractable
 {
 	GENERATED_BODY()
-
-public:
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
-	class USceneComponent* DefaultSceneRoot;
 	
 public:	
 	// Sets default values for this actor's properties

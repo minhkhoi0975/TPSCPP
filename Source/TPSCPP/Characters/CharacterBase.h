@@ -256,13 +256,6 @@ public:
 	UFUNCTION(BlueprintCallable)
 	EFactionAttitude GetAttitudeTowardsCharacter(const ACharacterBase* OtherCharacter) const;
 
-protected:
-	// Called when the game starts or when spawned
-	virtual void BeginPlay() override;
-
-	// Required for replication
-	void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
-
 	/**
 	 *   Damage
 	 */
@@ -278,7 +271,12 @@ public:
 	bool EnableRagdoll_Validate(float DamageAmount, struct FDamageEvent const& DamageEvent);
 	void EnableRagdoll_Implementation(float DamageAmount, struct FDamageEvent const& DamageEvent);
 
+protected:
+	// Called when the game starts or when spawned
+	virtual void BeginPlay() override;
 
+	// Required for replication
+	void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 public:	
 	// Called every frame

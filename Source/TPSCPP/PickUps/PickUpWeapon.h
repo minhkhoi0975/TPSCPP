@@ -36,6 +36,7 @@ protected:
 	void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 public:
+	UFUNCTION()
 	virtual void DestroyPickUp() override;
 
 	virtual void OnInteracted(ACharacterBase* Character) override;

@@ -5,6 +5,9 @@
 #include "CoreMinimal.h"
 #include "AIController.h"
 #include "Perception/AIPerceptionComponent.h"
+#include "Perception/AISenseConfig_Sight.h"
+#include "Perception/AISenseConfig_Hearing.h"
+#include "Perception//AISenseConfig_Damage.h"
 #include "AIControllerBase.generated.h"
 
 /**
@@ -17,6 +20,17 @@ class TPSCPP_API AAIControllerBase : public AAIController
 
 public:
 	AAIControllerBase();
+
+protected:
+	/**AI sense configs*/
+	UPROPERTY()
+	UAISenseConfig_Sight* AISightConfig;
+
+	UPROPERTY()
+	UAISenseConfig_Hearing* AIHearingConfig;
+
+	UPROPERTY()
+	UAISenseConfig_Damage* AIDamageConfig;
 	
 public:
 	/** AI*/

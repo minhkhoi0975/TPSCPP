@@ -93,7 +93,11 @@ public:
 	class UCurveFloat* RecoilCurve;
 
 	/**Recoil timeline*/
+	UPROPERTY(VisibleAnywhere, Category = "Accuracy")
 	FTimeline RecoilTimeline;
+
+	UPROPERTY(VisibleAnywhere, Category = "Accuracy")
+	FOnTimelineFloat RecoilTimelineCallback;
 
 	/**Camera shake scale.*/
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Accuracy")

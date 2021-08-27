@@ -23,7 +23,7 @@ AAIControllerBase::AAIControllerBase(): Super()
 	AIPerception = CreateDefaultSubobject<UAIPerceptionComponent>(TEXT("AI_Perception"));
 
 	// Add AI Sight
-	UAISenseConfig_Sight* AISightConfig = CreateDefaultSubobject<UAISenseConfig_Sight>(TEXT("Sight Config"));
+	AISightConfig = CreateDefaultSubobject<UAISenseConfig_Sight>(TEXT("Sight Config"));
 	AISightConfig->SightRadius = 5000.0f;
 	AISightConfig->LoseSightRadius = 6000.0f;
 	AISightConfig->PeripheralVisionAngleDegrees = 90.0f;
@@ -33,7 +33,7 @@ AAIControllerBase::AAIControllerBase(): Super()
 	AIPerception->ConfigureSense(*AISightConfig);
 
 	// Add AI Heaing
-	UAISenseConfig_Hearing* AIHearingConfig = CreateDefaultSubobject<UAISenseConfig_Hearing>(TEXT("Hearing Config"));
+	AIHearingConfig = CreateDefaultSubobject<UAISenseConfig_Hearing>(TEXT("Hearing Config"));
 	AIHearingConfig->HearingRange = 5000.0f;
 	AIHearingConfig->DetectionByAffiliation.bDetectEnemies = true;
 	AIHearingConfig->DetectionByAffiliation.bDetectNeutrals = true;
@@ -41,7 +41,7 @@ AAIControllerBase::AAIControllerBase(): Super()
 	AIPerception->ConfigureSense(*AIHearingConfig);
 
 	// Add AI Damage
-	UAISenseConfig_Damage* AIDamageConfig = CreateDefaultSubobject<UAISenseConfig_Damage>(TEXT("Damage Config"));
+	AIDamageConfig = CreateDefaultSubobject<UAISenseConfig_Damage>(TEXT("Damage Config"));
 	AIPerception->ConfigureSense(*AIDamageConfig);
 
 	// Set dominant sense
@@ -139,15 +139,16 @@ void AAIControllerBase::OnTargetPerceptionUpdated(AActor* Actor, FAIStimulus Sti
 					BlackBoardComponent->SetValueAsBool("bCanHearStrangeNoise", Stimulus.WasSuccessfullySensed());
 				}
 
-				UE_LOG(LogTemp, Display, TEXT("Enemy Found."));
-
+				//UE_LOG(LogTemp, Display, TEXT("Enemy Found."));
+				break;
 
 			case EFactionAttitude::Ally:
-				UE_LOG(LogTemp, Display, TEXT("Ally Found."));
-
+				//UE_LOG(LogTemp, Display, TEXT("Ally Found."));
+				break;
 
 			default:
-				UE_LOG(LogTemp, Display, TEXT("Neutral Found."));
+				//UE_LOG(LogTemp, Display, TEXT("Neutral Found."));
+				break;
 			}
 			
 		}

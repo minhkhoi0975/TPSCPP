@@ -11,7 +11,7 @@
 APickUpBase::APickUpBase()
 {
 	// Root Component
-	DefaultSceneRoot = CreateDefaultSubobject<USceneComponent>(TEXT("Default Scene Root"));
+	RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("Default Scene Root"));
 
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
@@ -54,6 +54,7 @@ void APickUpBase::DestroyPickUp()
 {
 	if (HasAuthority())
 	{
+		GetWorld()->GetTimerManager().ClearAllTimersForObject(this);
 		Destroy();
 	}
 }

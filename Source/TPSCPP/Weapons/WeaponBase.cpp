@@ -32,6 +32,7 @@ AWeaponBase::AWeaponBase()
 	GunMesh->SetCollisionEnabled(ECollisionEnabled::Type::QueryOnly);
 	GunMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Overlap);
 	GunMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Block);
+	RootComponent = GunMesh;
 
 	// Muzzle
 	Muzzle = CreateAbstractDefaultSubobject<USphereComponent>(TEXT("Muzzle"));
@@ -46,9 +47,9 @@ void AWeaponBase::BeginPlay()
 	Super::BeginPlay();
 
 	// Recoil Timeline
-	if (IsValid(RecoilCurve))
+	if (HasAuthority() && IsValid(RecoilCurve))
 	{
-		FOnTimelineFloat RecoilTimelineCallback;
+		
 		RecoilTimelineCallback.BindUFunction(this, FName("TimelineRecoil_Update"));
 
 		RecoilTimeline.AddInterpFloat(RecoilCurve, RecoilTimelineCallback);

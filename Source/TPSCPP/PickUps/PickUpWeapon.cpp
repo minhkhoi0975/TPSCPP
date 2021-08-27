@@ -6,6 +6,7 @@
 #include "Components/SkeletalMeshComponent.h"
 #include "Engine/World.h"
 #include "Net/UnrealNetwork.h"
+#include "TimerManager.h"
 
 APickUpWeapon::APickUpWeapon(): Super()
 {
@@ -15,32 +16,36 @@ void APickUpWeapon::OnConstruction(const FTransform& Transform)
 {
 	Super::OnConstruction(Transform);
 
-	if (HasAuthority() && WeaponInstance.WeaponClass)
+	if (HasAuthority())
 	{
 		if (IsValid(Weapon))
 		{
 			Weapon->Destroy();
+			Weapon = nullptr;
 		}
 
-		Weapon = GetWorld()->SpawnActorDeferred<AWeaponBase>(WeaponInstance.WeaponClass, GetActorTransform(), this, nullptr);
-		if (IsValid(Weapon))
+		if (WeaponInstance.WeaponClass)
 		{
-			Weapon->AmmoMagazine = (WeaponInstance.AmmoMagazine >= 0 && WeaponInstance.AmmoMagazine <= Weapon->AmmoMagazineMax) ? WeaponInstance.AmmoMagazine : Weapon->AmmoMagazineMax;
-			Weapon->AmmoInventory = (WeaponInstance.AmmoInventory >= 0 && WeaponInstance.AmmoInventory <= (Weapon->AmmoMax - Weapon->AmmoMagazine)) ? WeaponInstance.AmmoInventory : Weapon->AmmoMax - Weapon->AmmoMagazine;
-
-			if (bWeaponMeshSimulatesPhysics)
+			Weapon = GetWorld()->SpawnActorDeferred<AWeaponBase>(WeaponInstance.WeaponClass, GetActorTransform(), this, nullptr);
+			if (IsValid(Weapon))
 			{
-				Weapon->EnableSimulatePhysics();
-			}
-			else
-			{
-				Weapon->DisableSimulatePhysics();
-			}
+				Weapon->AmmoMagazine = (WeaponInstance.AmmoMagazine >= 0 && WeaponInstance.AmmoMagazine <= Weapon->AmmoMagazineMax) ? WeaponInstance.AmmoMagazine : Weapon->AmmoMagazineMax;
+				Weapon->AmmoInventory = (WeaponInstance.AmmoInventory >= 0 && WeaponInstance.AmmoInventory <= (Weapon->AmmoMax - Weapon->AmmoMagazine)) ? WeaponInstance.AmmoInventory : Weapon->AmmoMax - Weapon->AmmoMagazine;
 
-			FAttachmentTransformRules AttachmentTransformRules(EAttachmentRule::SnapToTarget, EAttachmentRule::SnapToTarget, EAttachmentRule::SnapToTarget, true);
-			Weapon->AttachToActor(this, AttachmentTransformRules);
+				if (bWeaponMeshSimulatesPhysics)
+				{
+					Weapon->EnableSimulatePhysics();
+				}
+				else
+				{
+					Weapon->DisableSimulatePhysics();
+				}
 
-			Weapon->FinishSpawning(GetActorTransform());
+				FAttachmentTransformRules AttachmentTransformRules(EAttachmentRule::SnapToTarget, EAttachmentRule::SnapToTarget, EAttachmentRule::SnapToTarget, true);
+				Weapon->AttachToActor(this, AttachmentTransformRules);
+
+				Weapon->FinishSpawning(GetActorTransform());
+			}
 		}
 	}
 }
@@ -57,6 +62,7 @@ void APickUpWeapon::DestroyPickUp()
 {
 	if (HasAuthority())
 	{
+		GetWorld()->GetTimerManager().ClearAllTimersForObject(this);
 		if (IsValid(Weapon))
 		{
 			Weapon->Destroy();

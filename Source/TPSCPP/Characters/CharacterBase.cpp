@@ -84,9 +84,8 @@ ACharacterBase::ACharacterBase(): Super()
 	MeshVisibility->SetSphereRadius(12.0f);
 
 	// Movement component.
-	UCharacterMovementComponent* CharacterMovementComponent = GetCharacterMovement();
-	CharacterMovementComponent->RotationRate = FRotator(0.0f, 180.0f, 0.0f);
-	CharacterMovementComponent->bUseControllerDesiredRotation = true;
+	GetCharacterMovement()->RotationRate = FRotator(0.0f, 180.0f, 0.0f);
+	GetCharacterMovement()->bUseControllerDesiredRotation = true;
 
 	// Disable this so that AI does not make sharp rotation.
 	bUseControllerRotationYaw = false;
@@ -317,25 +316,25 @@ void ACharacterBase::InputReload()
 void ACharacterBase::InputSwitchWeapon1()
 {
 	SwitchWeapon(0);
-	UE_LOG(LogTemp, Display, TEXT("Switch to weapon 1"));
+	//UE_LOG(LogTemp, Display, TEXT("Switch to weapon 1"));
 }
 
 void ACharacterBase::InputSwitchWeapon2()
 {
 	SwitchWeapon(1);
-	UE_LOG(LogTemp, Display, TEXT("Switch to weapon 2"));
+	//UE_LOG(LogTemp, Display, TEXT("Switch to weapon 2"));
 }
 
 void ACharacterBase::InputSwitchWeapon3()
 {
 	SwitchWeapon(2);
-	UE_LOG(LogTemp, Display, TEXT("Switch to weapon 3"));
+	//UE_LOG(LogTemp, Display, TEXT("Switch to weapon 3"));
 }
 
 void ACharacterBase::InputSwitchWeapon4()
 {
 	SwitchWeapon(3);
-	UE_LOG(LogTemp, Display, TEXT("Switch to weapon 4"));
+	//UE_LOG(LogTemp, Display, TEXT("Switch to weapon 4"));
 }
 
 bool ACharacterBase::StartFiring_Validate()
@@ -443,8 +442,6 @@ void ACharacterBase::SaveCurrentWeaponInfo()
 	}
 }
 
-
-
 void ACharacterBase::InputInteract()
 {
 	Interact();
@@ -462,6 +459,7 @@ bool ACharacterBase::Interact_Validate()
 
 void ACharacterBase::Interact_Implementation()
 {
+	// Perform line trace.
 	FVector StartLocation = Camera->GetComponentLocation();
 	FVector EndLocation = StartLocation + Camera->GetForwardVector() * 300.0f;
 
@@ -473,8 +471,8 @@ void ACharacterBase::Interact_Implementation()
 	bool Hit = GetWorld()->LineTraceSingleByChannel(HitResult, StartLocation, EndLocation, ECollisionChannel::ECC_Visibility, CollisionQuerryParams);
 	//DrawDebugLine(GetWorld(), StartLocation, EndLocation, FColor::Green, false, 5.0f);
 
+	// Check if the line hits anything.
 	AActor* HitActor = HitResult.GetActor();
-
 	if (Hit && HitActor)
 	{
 		IInteractable* InteractableActor = nullptr;
@@ -601,23 +599,23 @@ float ACharacterBase::TakeDamage(float DamageAmount, FDamageEvent const& DamageE
 		Die(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
 	}
 
-	UE_LOG(LogTemp, Display, TEXT("Hit"));
+	//UE_LOG(LogTemp, Display, TEXT("Hit"));
 
 	return DamageAmount;
 }
 
 void ACharacterBase::Die(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser)
 {
-	if (HasAuthority())
-	{
-		DropWeapon(false);
+	DropWeapon(false);
 
-		EnableRagdoll(DamageAmount, DamageEvent);
+	EnableRagdoll(DamageAmount, DamageEvent);
 
-		DetachFromControllerPendingDestroy();
+	DetachFromControllerPendingDestroy();
 
-		SetLifeSpan(5.0f);
-	}
+	MeshVisibility->OnComponentBeginOverlap.Clear();
+	MeshVisibility->OnComponentEndOverlap.Clear();
+
+	SetLifeSpan(5.0f);
 }
 
 bool ACharacterBase::EnableRagdoll_Validate(float DamageAmount, FDamageEvent const& DamageEvent)
