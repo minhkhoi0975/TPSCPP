@@ -4,7 +4,6 @@
 #include "AIControllerBase.h"
 #include "AIPath.h"
 #include "Characters/CharacterBase.h"
-#include "Engine/Engine.h"
 #include "Perception/AIPerceptionComponent.h"
 #include "Perception/AIPerceptionStimuliSourceComponent.h"
 #include "Perception/AISenseConfig_Sight.h"
@@ -15,7 +14,7 @@
 #include "Perception/AIPerceptionSystem.h"
 #include "BehaviorTree/BehaviorTree.h"
 #include "BehaviorTree/BlackboardComponent.h"
-#include "UObject/ConstructorHelpers.h"
+#include "Interfaces/FocalPoint.h"
 
 AAIControllerBase::AAIControllerBase(): Super()
 {
@@ -95,13 +94,14 @@ void AAIControllerBase::BeginPlay()
 
 FVector AAIControllerBase::GetFocalPointOnActor(const AActor* Actor) const
 {
-	// Check if the actor is a character. If it does, get the half height of the capsule component.
-	if (Actor->IsA(ACharacterBase::StaticClass()))
-	{
-		return Actor->GetActorLocation() + FVector(0.0f, 0.0f, 88.0f);
-	}
+	if (!Actor)
+		return FAISystem::InvalidLocation;
 
-	// Otherwise, return the location of the character's pivot point.
+	// If the actor has a focal point, get its location.
+	if (const IFocalPoint* FocalPoint = Cast<IFocalPoint>(Actor))
+		return FocalPoint->GetFocalPoint();
+
+	// Otherwise, return the root location of the actor.
 	return Actor->GetActorLocation();
 }
 
@@ -137,50 +137,6 @@ void AAIControllerBase::OnTargetPerceptionUpdated(AActor* Actor, FAIStimulus Sti
 	default:
 		break;
 	}
-
-	/*
-	// Get character controlled by this AI controller.
-	ACharacterBase* ControlledCharacter = Cast<ACharacterBase>(GetCharacter());
-	if (!IsValid(ControlledCharacter))
-	{
-		return;
-	}
-	*/
-
-	/*
-	// Check if the actor is a character.
-	ACharacterBase* OtherCharacter = Cast<ACharacterBase>(Actor);
-	if (IsValid(OtherCharacter))
-	{
-		switch (ControlledCharacter->GetAttitudeTowardsCharacter(OtherCharacter))
-		{
-		case EFactionAttitude::Enemy:
-			if (UAIPerceptionSystem::GetSenseClassForStimulus(GetWorld(), Stimulus) == UAISense_Sight::StaticClass())
-			{
-				BlackBoardComponent->SetValueAsObject("SeenEnemy", Actor);
-				BlackBoardComponent->SetValueAsVector("SeenEnemyLastKnownLocation", Stimulus.StimulusLocation);
-				BlackBoardComponent->SetValueAsBool("bCanSeeEnemy", Stimulus.WasSuccessfullySensed());
-			}
-			else if (UAIPerceptionSystem::GetSenseClassForStimulus(GetWorld(), Stimulus) == UAISense_Hearing::StaticClass())
-			{
-				BlackBoardComponent->SetValueAsVector("StrangeNoiseLocation", Stimulus.StimulusLocation);
-				BlackBoardComponent->SetValueAsBool("bCanHearStrangeNoise", Stimulus.WasSuccessfullySensed());
-			}
-
-			//UE_LOG(LogTemp, Display, TEXT("Enemy Found."));
-			break;
-
-		case EFactionAttitude::Ally:
-			//UE_LOG(LogTemp, Display, TEXT("Ally Found."));
-			break;
-
-		default:
-			//UE_LOG(LogTemp, Display, TEXT("Neutral Found."));
-			break;
-		}
-
-	}
-	*/
 }
 
 FGenericTeamId AAIControllerBase::GetGenericTeamId() const

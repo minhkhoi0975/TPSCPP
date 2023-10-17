@@ -684,6 +684,11 @@ UAISense_Sight::EVisibilityResult ACharacterBase::CanBeSeenFrom(const FCanBeSeen
 	return UAISense_Sight::EVisibilityResult::NotVisible;
 }
 
+FVector ACharacterBase::GetFocalPoint() const
+{
+	return GetActorLocation() + FVector(0.0f, 0.0f, CharacterCapsuleComponent->GetScaledCapsuleHalfHeight());
+}
+
 void ACharacterBase::SetGenericTeamId(const FGenericTeamId& TeamID)
 {
 	this->TeamID = TeamID;

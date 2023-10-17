@@ -9,6 +9,7 @@
 #include "Animation/AnimMontage.h"
 #include "Weapons/WeaponBase.h"
 #include "AIController/AIPath.h"
+#include "Interfaces/FocalPoint.h"
 #include "CharacterBase.generated.h"
 
 /**
@@ -53,7 +54,7 @@ enum class ECharacterFlags : uint8
  * Character class
  */
 UCLASS(Blueprintable)
-class TPSCPP_API ACharacterBase : public ACharacter, public IAISightTargetInterface, public IGenericTeamAgentInterface
+class TPSCPP_API ACharacterBase : public ACharacter, public IAISightTargetInterface, public IGenericTeamAgentInterface, public IFocalPoint
 {
 	GENERATED_BODY()
 
@@ -79,7 +80,6 @@ public:
 	/** AI*/
 	UPROPERTY(VisibleDefaultsOnly, Category = AI)
 	class UAIPerceptionStimuliSourceComponent* AIPerceptionStimuliSource;
-
 
 public:
 	// Sets default values for this character's properties
@@ -293,6 +293,8 @@ public:
 public:
 	// Override this function so that AI can see character's whole body instead of just root position.
 	virtual UAISense_Sight::EVisibilityResult CanBeSeenFrom(const FCanBeSeenFromContext& Context, FVector& OutSeenLocation, int32& OutNumberOfLoSChecksPerformed, int32& OutNumberOfAsyncLosCheckRequested, float& OutSightStrength, int32* UserData = nullptr, const FOnPendingVisibilityQueryProcessedDelegate* Delegate = nullptr) override;
+
+	virtual FVector GetFocalPoint() const override;
 
 public:
 	virtual void SetGenericTeamId(const FGenericTeamId& TeamID) override;
