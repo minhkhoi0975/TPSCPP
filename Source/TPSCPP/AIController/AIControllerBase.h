@@ -47,4 +47,7 @@ protected:
 
 	UFUNCTION()
 	void OnTargetPerceptionUpdated(AActor* Actor, FAIStimulus Stimulus);
+
+public:
+	virtual FGenericTeamId GetGenericTeamId() const override;
 };

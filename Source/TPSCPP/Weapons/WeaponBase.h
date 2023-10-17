@@ -6,7 +6,7 @@
 #include "GameFramework/Actor.h"
 #include "Components/TimelineComponent.h"
 #include "Animation/AnimMontage.h"
-#include "Camera/CameraShake.h"
+#include "Camera/CameraShakeBase.h"
 #include "WeaponBase.generated.h"
 
 #define GetWeaponFlag(WeaponFlag) static_cast<uint8>(WeaponFlag)
@@ -35,6 +35,7 @@ struct FWeaponInstance
 UENUM(BlueprintType, Meta = (Bitflags))
 enum class EWeaponFlags : uint8
 {
+	None	   = 0,
 	Firing     = (1 << 0),
 	Reloading  = (1 << 1),
 	END
@@ -105,7 +106,7 @@ public:
 
 	/**Camera shake class.*/
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Accuracy")
-	TSubclassOf<UCameraShake> CameraShakeClass = TSubclassOf<UCameraShake>();
+	TSubclassOf<UCameraShakeBase> CameraShakeClass = TSubclassOf<UCameraShakeBase>();
 
 	/**How long before next shot.*/
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Fire Rate")

@@ -14,7 +14,7 @@ ACharacterSpawner::ACharacterSpawner(): Super()
 {
 	// Dummy.
 	Dummy = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Dummy"));
-	Dummy->RelativeRotation = FRotator(0.0f, -90.0f, 0.0f);
+	Dummy->SetRelativeRotation(FRotator(0.0f, -90.0f, 0.0f));
 	Dummy->bHiddenInGame = true;
 	static ConstructorHelpers::FObjectFinder<USkeletalMesh> SkeletalMesh(TEXT("/Game/AnimStarterPack/UE4_Mannequin/Mesh/SK_Mannequin"));
 	if (SkeletalMesh.Succeeded())

@@ -69,10 +69,10 @@ void AAIControllerBase::BeginPlay()
 	// Run the behavior tree.
 	if (IsValid(BehaviorTree) && RunBehaviorTree(BehaviorTree))
 	{
-		ACharacterBase* Character = Cast<ACharacterBase>(GetPawn());
-		if (IsValid(Character))
+		ACharacterBase* ControlledCharacter = Cast<ACharacterBase>(GetPawn());
+		if (IsValid(ControlledCharacter))
 		{
-			AAIPath* AIPath = Character->AIPath;
+			AAIPath* AIPath = ControlledCharacter->AIPath;
 
 			if (IsValid(AIPath))
 			{
@@ -107,54 +107,87 @@ FVector AAIControllerBase::GetFocalPointOnActor(const AActor* Actor) const
 
 void AAIControllerBase::OnTargetPerceptionUpdated(AActor* Actor, FAIStimulus Stimulus)
 {
-    //GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Cyan, "I sense something...");
+    if (!Actor)
+		return;
 
+	UBlackboardComponent* BlackBoardComponent = GetBlackboardComponent();
+	if (!BlackBoardComponent)
+		return;
+
+	ETeamAttitude::Type TeamAttitude = FGenericTeamId::GetAttitude(this, Actor);
+	switch (TeamAttitude)
+	{
+	case ETeamAttitude::Hostile:
+		if (UAIPerceptionSystem::GetSenseClassForStimulus(GetWorld(), Stimulus) == UAISense_Sight::StaticClass())
+		{
+			BlackBoardComponent->SetValueAsObject("SeenEnemy", Actor);
+			BlackBoardComponent->SetValueAsVector("SeenEnemyLastKnownLocation", Stimulus.StimulusLocation);
+			BlackBoardComponent->SetValueAsBool("bCanSeeEnemy", Stimulus.WasSuccessfullySensed());
+		}
+		else if (UAIPerceptionSystem::GetSenseClassForStimulus(GetWorld(), Stimulus) == UAISense_Hearing::StaticClass())
+		{
+			BlackBoardComponent->SetValueAsVector("StrangeNoiseLocation", Stimulus.StimulusLocation);
+			BlackBoardComponent->SetValueAsBool("bCanHearStrangeNoise", Stimulus.WasSuccessfullySensed());
+		}
+		break;
+
+	case ETeamAttitude::Friendly:
+		break;
+
+	default:
+		break;
+	}
+
+	/*
 	// Get character controlled by this AI controller.
 	ACharacterBase* ControlledCharacter = Cast<ACharacterBase>(GetCharacter());
 	if (!IsValid(ControlledCharacter))
 	{
 		return;
 	}
+	*/
 
-
-	UBlackboardComponent* BlackBoardComponent = GetBlackboardComponent();
-	if (IsValid(BlackBoardComponent) && IsValid(Actor))
+	/*
+	// Check if the actor is a character.
+	ACharacterBase* OtherCharacter = Cast<ACharacterBase>(Actor);
+	if (IsValid(OtherCharacter))
 	{
-		// Check if the actor is a character.
-		ACharacterBase* OtherCharacter = Cast<ACharacterBase>(Actor);
-		if (IsValid(OtherCharacter))
+		switch (ControlledCharacter->GetAttitudeTowardsCharacter(OtherCharacter))
 		{
-			switch (ControlledCharacter->GetAttitudeTowardsCharacter(OtherCharacter))
+		case EFactionAttitude::Enemy:
+			if (UAIPerceptionSystem::GetSenseClassForStimulus(GetWorld(), Stimulus) == UAISense_Sight::StaticClass())
 			{
-			case EFactionAttitude::Enemy:		
-				if (UAIPerceptionSystem::GetSenseClassForStimulus(GetWorld(), Stimulus) == UAISense_Sight::StaticClass())
-				{
-					BlackBoardComponent->SetValueAsObject("SeenEnemy", Actor);
-					BlackBoardComponent->SetValueAsVector("SeenEnemyLastKnownLocation", Stimulus.StimulusLocation);
-					BlackBoardComponent->SetValueAsBool("bCanSeeEnemy", Stimulus.WasSuccessfullySensed());
-				}
-				else if (UAIPerceptionSystem::GetSenseClassForStimulus(GetWorld(), Stimulus) == UAISense_Hearing::StaticClass())
-				{
-					BlackBoardComponent->SetValueAsVector("StrangeNoiseLocation", Stimulus.StimulusLocation);
-					BlackBoardComponent->SetValueAsBool("bCanHearStrangeNoise", Stimulus.WasSuccessfullySensed());
-				}
-
-				//UE_LOG(LogTemp, Display, TEXT("Enemy Found."));
-				break;
-
-			case EFactionAttitude::Ally:
-				//UE_LOG(LogTemp, Display, TEXT("Ally Found."));
-				break;
-
-			default:
-				//UE_LOG(LogTemp, Display, TEXT("Neutral Found."));
-				break;
+				BlackBoardComponent->SetValueAsObject("SeenEnemy", Actor);
+				BlackBoardComponent->SetValueAsVector("SeenEnemyLastKnownLocation", Stimulus.StimulusLocation);
+				BlackBoardComponent->SetValueAsBool("bCanSeeEnemy", Stimulus.WasSuccessfullySensed());
 			}
-			
+			else if (UAIPerceptionSystem::GetSenseClassForStimulus(GetWorld(), Stimulus) == UAISense_Hearing::StaticClass())
+			{
+				BlackBoardComponent->SetValueAsVector("StrangeNoiseLocation", Stimulus.StimulusLocation);
+				BlackBoardComponent->SetValueAsBool("bCanHearStrangeNoise", Stimulus.WasSuccessfullySensed());
+			}
+
+			//UE_LOG(LogTemp, Display, TEXT("Enemy Found."));
+			break;
+
+		case EFactionAttitude::Ally:
+			//UE_LOG(LogTemp, Display, TEXT("Ally Found."));
+			break;
+
+		default:
+			//UE_LOG(LogTemp, Display, TEXT("Neutral Found."));
+			break;
 		}
+
 	}
-	else
-	{
-		GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, "Error: Blackboard component not found");
-	}
+	*/
+}
+
+FGenericTeamId AAIControllerBase::GetGenericTeamId() const
+{
+	IGenericTeamAgentInterface* TeamAgent = Cast<IGenericTeamAgentInterface>(GetPawn());
+	if (!TeamAgent)
+		return FGenericTeamId::NoTeam;
+
+	return TeamAgent->GetGenericTeamId();
 }
