@@ -53,7 +53,7 @@ enum class ECharacterFlags : uint8
  * Character class
  */
 UCLASS(Blueprintable)
-class TPSCPP_API ACharacterBase : public ACharacter, public IAISightTargetInterface
+class TPSCPP_API ACharacterBase : public ACharacter, public IAISightTargetInterface, public IGenericTeamAgentInterface
 {
 	GENERATED_BODY()
 
@@ -109,7 +109,7 @@ public:
 	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite, Category = "Weapon")
 	TArray<FWeaponInstance> Inventory;
 
-	/** The index of WeaponCurrent*/
+	/** The index of the current weapon*/
 	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite, Category = "Weapon")
 	int WeaponCurrentIndex;
 
@@ -131,6 +131,10 @@ public:
 	/** Flags*/
 	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadWrite, Category = "AnimationStatus", Meta = (Bitmask, BitmaskEnum = ECharacterFlags))
 	uint8 CharacterFlags;
+
+protected:
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Faction")
+	FGenericTeamId TeamID;
 
 	/** 
 	 *   Inputs 
@@ -286,8 +290,11 @@ public:
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
-	// Override this function so that AI can see character's whole body instead of just "middle point".
-	//virtual bool CanBeSeenFrom(const FVector& ObserverLocation, FVector& OutSeenLocation, int32& NumberOfLoSChecksPerformed, float& OutSightStrength, const AActor* IgnoreActor) const;
-
+public:
+	// Override this function so that AI can see character's whole body instead of just root position.
 	virtual UAISense_Sight::EVisibilityResult CanBeSeenFrom(const FCanBeSeenFromContext& Context, FVector& OutSeenLocation, int32& OutNumberOfLoSChecksPerformed, int32& OutNumberOfAsyncLosCheckRequested, float& OutSightStrength, int32* UserData = nullptr, const FOnPendingVisibilityQueryProcessedDelegate* Delegate = nullptr) override;
+
+public:
+	virtual void SetGenericTeamId(const FGenericTeamId& TeamID) override;
+	virtual FGenericTeamId GetGenericTeamId() const override;
 };

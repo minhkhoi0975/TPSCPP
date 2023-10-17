@@ -18,7 +18,6 @@
 #include "Perception/AISense_Hearing.h"
 #include "AIController/AIControllerBase.h"
 #include "Engine/World.h"
-#include "UObject/ConstructorHelpers.h"
 #include "Animation/AnimInstance.h"
 #include "Net/UnrealNetwork.h"
 #include "DrawDebugHelpers.h"
@@ -41,34 +40,12 @@ ACharacterBase::ACharacterBase(): Super()
 	CharacterMeshComponent->SetRelativeRotation(FRotator(0.0f, -90.0f, 0.0f));
 	CharacterMeshComponent->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Overlap);
 	CharacterMeshComponent->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Block);
-
-	// Set mesh and animation for CharacterMeshComponent
-	static ConstructorHelpers::FObjectFinder<USkeletalMesh> CharacterMesh(TEXT("/Game/AnimStarterPack/UE4_Mannequin/Mesh/SK_Mannequin"));
-	if (CharacterMesh.Succeeded())
-	{
-		CharacterMeshComponent->SetSkeletalMesh(CharacterMesh.Object);
-
-		static ConstructorHelpers::FObjectFinder<UAnimBlueprint> AnimBlueprint(TEXT("/Game/MyAssets/Characters/AnimationBlueprint/CharacterAnimationBlueprint"));
-		if (AnimBlueprint.Succeeded())
-		{
-			CharacterMeshComponent->SetAnimationMode(EAnimationMode::AnimationBlueprint);
-			//CharacterMeshComponent->SetAnimInstanceClass(AnimBlueprint.Object->StaticClass());
-		}
-		else
-		{
-			UE_LOG(LogTemp, Error, TEXT("Cannot find /Game/MyAssets/Characters/AnimationBlueprint/CharacterAnimationBlueprint"));
-		}
-	}
-	else
-	{
-		UE_LOG(LogTemp, Error, TEXT("/Game/AnimStarterPack/UE4_Mannequin/Mesh/SK_Mannequin"));
-	}
+	CharacterMeshComponent->SetAnimationMode(EAnimationMode::AnimationBlueprint);
 
 	// Spring arm
 	SpringArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArm"));
 	SpringArm->SetupAttachment(CharacterCapsuleComponent);
 	SpringArm->SetRelativeLocation(FVector(0.0f, 0.0f, 60.0f));
-
 	SpringArm->TargetArmLength = 100.0f;
 	SpringArm->SocketOffset = FVector(0, 50.0f, 10.0f);
 	SpringArm->bUsePawnControlRotation = true;
@@ -470,34 +447,19 @@ void ACharacterBase::Interact_Implementation()
 
 	FHitResult HitResult;
 	bool Hit = GetWorld()->LineTraceSingleByChannel(HitResult, StartLocation, EndLocation, ECollisionChannel::ECC_Visibility, CollisionQuerryParams);
-	//DrawDebugLine(GetWorld(), StartLocation, EndLocation, FColor::Green, false, 5.0f);
+	if (!Hit || !HitResult.GetActor())
+		return;
 
-	// Check if the line hits anything.
-	AActor* HitActor = HitResult.GetActor();
-	if (Hit && HitActor)
+	IInteractable* InteractableActor = Cast<IInteractable>(HitResult.GetActor());
+	if (InteractableActor)
 	{
-		IInteractable* InteractableActor = nullptr;
-
-		// Check if the hit actor implements IInteractable.
-		InteractableActor = Cast<IInteractable>(HitActor);
-		if (InteractableActor)
-		{
-			InteractableActor->OnInteracted(this);
-			return;
-		}
-
-		// Check if the owner of the hit actor implements IInteractable.
-		AActor* HitActorOwner = HitActor->GetOwner();
-		if (IsValid(HitActorOwner))
-		{
-			InteractableActor = Cast<IInteractable>(HitActorOwner);
-			if (InteractableActor)
-			{
-				InteractableActor->OnInteracted(this);
-				return;
-			}
-		}
+		InteractableActor->OnInteracted(this);
+		return;
 	}
+
+	InteractableActor = Cast<IInteractable>(HitResult.GetActor()->GetOwner());
+	if (InteractableActor)
+		InteractableActor->OnInteracted(this);
 }
 
 bool ACharacterBase::DropWeapon_Validate(bool SwitchWeapon)
@@ -507,44 +469,44 @@ bool ACharacterBase::DropWeapon_Validate(bool SwitchWeapon)
 
 void ACharacterBase::DropWeapon_Implementation(bool SwitchWeapon)
 {
-	if (IsValid(WeaponCurrent))
+	if (!WeaponCurrent)
+		return;
+
+	// Remove information about the current weapon in the inventory.
+	Inventory[WeaponCurrentIndex].WeaponClass = nullptr;
+	Inventory[WeaponCurrentIndex].AmmoInventory = 0;
+	Inventory[WeaponCurrentIndex].AmmoMagazine = 0;
+
+	// Spawn a pick-up.
+	APickUpWeapon* PickUpWeapon = GetWorld()->SpawnActorDeferred<APickUpWeapon>(APickUpWeapon::StaticClass(), GetActorTransform());
+	if (IsValid(PickUpWeapon))
 	{
-		// Remove information about WeaponCurrent in Inventory.
-		Inventory[WeaponCurrentIndex].WeaponClass = nullptr;
-		Inventory[WeaponCurrentIndex].AmmoInventory = 0;
-		Inventory[WeaponCurrentIndex].AmmoMagazine = 0;
+		PickUpWeapon->SetActorRotation(FRotator(90.0f, PickUpWeapon->GetActorRotation().Yaw, 0.0f));
+		PickUpWeapon->WeaponInstance.WeaponClass = WeaponCurrent->GetClass();
+		PickUpWeapon->WeaponInstance.AmmoMagazine = WeaponCurrent->AmmoMagazine;
+		PickUpWeapon->WeaponInstance.AmmoInventory = WeaponCurrent->AmmoInventory;
+		PickUpWeapon->bWeaponMeshSimulatesPhysics = true;
+		PickUpWeapon->Age = 60.0f;
 
-		// Spawn a pick-up.
-		APickUpWeapon* PickUpWeapon = GetWorld()->SpawnActorDeferred<APickUpWeapon>(APickUpWeapon::StaticClass(), GetActorTransform());
-		if (IsValid(PickUpWeapon))
-		{
-			PickUpWeapon->SetActorRotation(FRotator(90.0f, PickUpWeapon->GetActorRotation().Yaw, 0.0f));
-			PickUpWeapon->WeaponInstance.WeaponClass = WeaponCurrent->GetClass();
-			PickUpWeapon->WeaponInstance.AmmoMagazine = WeaponCurrent->AmmoMagazine;
-			PickUpWeapon->WeaponInstance.AmmoInventory = WeaponCurrent->AmmoInventory;
-			PickUpWeapon->bWeaponMeshSimulatesPhysics = true;
-			PickUpWeapon->Age = 60.0f;
+		PickUpWeapon->FinishSpawning(PickUpWeapon->GetActorTransform());
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("Cannot spawn weapon pick-up."));
+	}
 
-			PickUpWeapon->FinishSpawning(PickUpWeapon->GetActorTransform());
-		}
-		else
-		{
-			UE_LOG(LogTemp, Error, TEXT("Cannot spawn weapon pick-up."));
-		}
-		
-		// Destroy the weapon.
-		WeaponCurrent->Destroy();
+	// Destroy the weapon.
+	WeaponCurrent->Destroy();
 
-		// Automatically switch weapon.
-		if (SwitchWeapon)
+	// Automatically switch weapon.
+	if (SwitchWeapon)
+	{
+		for (int i = 0; i < Inventory.Num(); i++)
 		{
-			for (int i = 0; i < Inventory.Num(); i++)
+			if (Inventory[i].WeaponClass)
 			{
-				if (Inventory[i].WeaponClass)
-				{
-					this->SwitchWeapon(i);
-					return;
-				}
+				this->SwitchWeapon(i);
+				return;
 			}
 		}
 	}
@@ -680,48 +642,6 @@ void ACharacterBase::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 	PlayerInputComponent->BindAction("DropWeapon", IE_Pressed, this, &ACharacterBase::InputDropWeapon);
 }
 
-/*
-bool ACharacterBase::CanBeSeenFrom(const FVector& ObserverLocation, FVector& OutSeenLocation, int32& NumberOfLoSChecksPerformed, float& OutSightStrength, const AActor* IgnoreActor) const
-{
-	static const FName NAME_AILineOfSight = FName(TEXT("TestPawnLineOfSight"));
-
-	FHitResult HitResult;
-
-	auto Sockets = GetMesh()->GetAllSocketNames();
-
-	// Check if AI can detect character's bone.
-	for (int i = 0; i < Sockets.Num(); i++)
-	{
-		FVector socketLocation = GetMesh()->GetSocketLocation(Sockets[i]);
-		const bool bHitSocket = GetWorld()->LineTraceSingleByChannel(HitResult, ObserverLocation, socketLocation, ECollisionChannel::ECC_Visibility, FCollisionQueryParams(NAME_AILineOfSight, true, IgnoreActor));
-		NumberOfLoSChecksPerformed++;
-
-		if (bHitSocket == false || (IsValid(HitResult.GetActor()) && HitResult.GetActor()->IsOwnedBy(this)))
-		{
-			OutSeenLocation = socketLocation;
-			OutSightStrength = 1;
-
-			return true;
-		}
-	}
-
-	// Check if AI can detect character's "middle point".
-	const bool bHit = GetWorld()->LineTraceSingleByChannel(HitResult, ObserverLocation, GetActorLocation(), ECollisionChannel::ECC_Visibility, FCollisionQueryParams(NAME_AILineOfSight, true, IgnoreActor));
-	NumberOfLoSChecksPerformed++;
-
-	if (bHit == false || (IsValid(HitResult.GetActor()) && HitResult.GetActor()->IsOwnedBy(this)))
-	{
-		OutSeenLocation = GetActorLocation();
-		OutSightStrength = 1;
-
-		return true;
-	}
-
-	OutSightStrength = 0;
-	return false;
-}
-*/
-
 UAISense_Sight::EVisibilityResult ACharacterBase::CanBeSeenFrom(const FCanBeSeenFromContext& Context, FVector& OutSeenLocation, int32& OutNumberOfLoSChecksPerformed, int32& OutNumberOfAsyncLosCheckRequested, float& OutSightStrength, int32* UserData, const FOnPendingVisibilityQueryProcessedDelegate* Delegate)
 {
 	static const FName NAME_AILineOfSight = FName(TEXT("TestPawnLineOfSight"));
@@ -762,5 +682,15 @@ UAISense_Sight::EVisibilityResult ACharacterBase::CanBeSeenFrom(const FCanBeSeen
 
 	OutSightStrength = 0;
 	return UAISense_Sight::EVisibilityResult::NotVisible;
+}
+
+void ACharacterBase::SetGenericTeamId(const FGenericTeamId& TeamID)
+{
+	this->TeamID = TeamID;
+}
+
+FGenericTeamId ACharacterBase::GetGenericTeamId() const
+{
+	return TeamID;
 }
 
