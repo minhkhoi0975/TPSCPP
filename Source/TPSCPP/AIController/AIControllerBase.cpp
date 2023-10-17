@@ -69,10 +69,10 @@ void AAIControllerBase::BeginPlay()
 	// Run the behavior tree.
 	if (IsValid(BehaviorTree) && RunBehaviorTree(BehaviorTree))
 	{
-		ACharacterBase* Character = Cast<ACharacterBase>(GetPawn());
-		if (IsValid(Character))
+		ACharacterBase* ControlledCharacter = Cast<ACharacterBase>(GetPawn());
+		if (IsValid(ControlledCharacter))
 		{
-			AAIPath* AIPath = Character->AIPath;
+			AAIPath* AIPath = ControlledCharacter->AIPath;
 
 			if (IsValid(AIPath))
 			{

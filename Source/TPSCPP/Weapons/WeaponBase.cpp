@@ -35,7 +35,7 @@ AWeaponBase::AWeaponBase()
 	RootComponent = GunMesh;
 
 	// Muzzle
-	Muzzle = CreateAbstractDefaultSubobject<USphereComponent>(TEXT("Muzzle"));
+	Muzzle = CreateDefaultSubobject<USphereComponent>(TEXT("Muzzle"));
 
 	// Enable replication
 	SetReplicates(true);
@@ -111,18 +111,11 @@ bool AWeaponBase::ApplyRecoil_Validate()
 
 void AWeaponBase::ApplyRecoil_Implementation()
 {
-	AActor* Instigator = GetInstigator();
+	ACharacterBase* CarryingCharacter = Cast<ACharacterBase>(GetInstigator());
+	if (!CarryingCharacter)
+		return;
 
-	if (IsValid(Instigator))
-	{
-		ACharacterBase* CarryingCharacter = Cast<ACharacterBase>(Instigator);
-		if (IsValid(CarryingCharacter))
-		{
-			CarryingCharacter->ApplyRecoil(RecoilTimeline.GetPlaybackPosition() * RecoilScale);
-		}
-	}
-
-	//UE_LOG(LogTemp, Display, TEXT("Recoil"));
+	CarryingCharacter->ApplyRecoil(RecoilTimeline.GetPlaybackPosition() * RecoilScale);
 }
 
 bool AWeaponBase::StopFiring_Validate()
@@ -145,19 +138,10 @@ void AWeaponBase::Fire_Implementation()
 {
 	if (!IsCurrentMagazineEmpty() && !(WeaponFlags & GetWeaponFlag(EWeaponFlags::Reloading)))
 	{
-		// Check if the gun is carried by a character.
-		ACharacterBase* CarryingCharacter = nullptr;
-		AActor* Instigator = GetInstigator();
-		if (IsValid(Instigator))
-		{
-			CarryingCharacter = Cast<ACharacterBase>(Instigator);
-		}
-
 		// Abort this function if the carrying character is switching weapon.
-		if (IsValid(CarryingCharacter) && (CarryingCharacter->CharacterFlags & GetCharacterFlag(ECharacterFlags::SwitchingWeapon)))
-		{
+		ACharacterBase* CarryingCharacter = Cast<ACharacterBase>(GetInstigator());
+		if (CarryingCharacter && CarryingCharacter->CharacterFlags & GetCharacterFlag(ECharacterFlags::SwitchingWeapon))
 			return;
-		}
 
 		FVector StartLocation;
 		FVector FiringDirection;
@@ -238,7 +222,7 @@ void AWeaponBase::Fire_Implementation()
 			APlayerController* PlayerController = Cast<APlayerController>(CarryingCharacter->GetController());
 			if (IsValid(PlayerController) && IsValid(CameraShakeClass))
 			{
-				PlayerController->ClientPlayCameraShake(CameraShakeClass, CameraShakeScale);
+				PlayerController->ClientStartCameraShake(CameraShakeClass, CameraShakeScale);
 			}
 		}
 
@@ -296,26 +280,19 @@ bool AWeaponBase::Reload_Validate()
 
 void AWeaponBase::Reload_Implementation()
 {
-	ACharacterBase* CarryingCharacter = nullptr;
-	AActor* Instigator = GetInstigator();
-	if (IsValid(Instigator))
-	{
-		CarryingCharacter = Cast<ACharacterBase>(Instigator);
-	}
+	ACharacterBase* CarryingCharacter = Cast<ACharacterBase>(GetInstigator());
+	if (!CarryingCharacter)
+		return;
 
-	if (IsValid(CarryingCharacter) && IsValid(AnimMontageReload) && CanReload())
-	{
+	if (IsValid(AnimMontageReload) && CanReload())
 		CarryingCharacter->ReplicateAnimMontagePlay(AnimMontageReload);
-	}
 	else
-	{
 		UE_LOG(LogTemp, Warning, TEXT("The weapon has no reload animation montage."));
-	}
 }
 
 bool AWeaponBase::CanReload()
 {
-	return AmmoInventory > 0 && !(WeaponFlags & GetWeaponFlag(EWeaponFlags::Reloading)) && AmmoMagazine < AmmoMagazineMax;
+	return AmmoInventory > 0 && AmmoMagazine < AmmoMagazineMax && !(WeaponFlags & GetWeaponFlag(EWeaponFlags::Reloading));
 }
 
 bool AWeaponBase::PlayEffect_Validate(UParticleSystem* ParticleEffect, const FTransform& SpawnTransform, USceneComponent* AttachToComponent)

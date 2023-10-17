@@ -37,8 +37,8 @@ ACharacterBase::ACharacterBase(): Super()
 
 	// Skeletal Mesh
 	CharacterMeshComponent = GetMesh();
-	CharacterMeshComponent->RelativeLocation = FVector(0.0f, 0.0f, -90.0f);
-	CharacterMeshComponent->RelativeRotation = FRotator(0.0f, -90.0f, 0.0f);
+	CharacterMeshComponent->SetRelativeLocation(FVector(0.0f, 0.0f, -90.0f));
+	CharacterMeshComponent->SetRelativeRotation(FRotator(0.0f, -90.0f, 0.0f));
 	CharacterMeshComponent->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Overlap);
 	CharacterMeshComponent->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Block);
 
@@ -67,7 +67,8 @@ ACharacterBase::ACharacterBase(): Super()
 	// Spring arm
 	SpringArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArm"));
 	SpringArm->SetupAttachment(CharacterCapsuleComponent);
-	SpringArm->RelativeLocation = FVector(0.0f, 0.0f, 60.0f);
+	SpringArm->SetRelativeLocation(FVector(0.0f, 0.0f, 60.0f));
+
 	SpringArm->TargetArmLength = 100.0f;
 	SpringArm->SocketOffset = FVector(0, 50.0f, 10.0f);
 	SpringArm->bUsePawnControlRotation = true;
@@ -80,7 +81,7 @@ ACharacterBase::ACharacterBase(): Super()
 	// Mesh visibility
 	MeshVisibility = CreateDefaultSubobject<USphereComponent>(TEXT("MeshVisibility"));
 	MeshVisibility->SetupAttachment(Camera);
-	MeshVisibility->RelativeLocation = FVector(-6.85f, 0.0f, 0.0f);
+	MeshVisibility->SetRelativeLocation(FVector(-6.85f, 0.0f, 0.0f));
 	MeshVisibility->SetSphereRadius(12.0f);
 
 	// Movement component.
@@ -679,6 +680,7 @@ void ACharacterBase::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 	PlayerInputComponent->BindAction("DropWeapon", IE_Pressed, this, &ACharacterBase::InputDropWeapon);
 }
 
+/*
 bool ACharacterBase::CanBeSeenFrom(const FVector& ObserverLocation, FVector& OutSeenLocation, int32& NumberOfLoSChecksPerformed, float& OutSightStrength, const AActor* IgnoreActor) const
 {
 	static const FName NAME_AILineOfSight = FName(TEXT("TestPawnLineOfSight"));
@@ -694,7 +696,7 @@ bool ACharacterBase::CanBeSeenFrom(const FVector& ObserverLocation, FVector& Out
 		const bool bHitSocket = GetWorld()->LineTraceSingleByChannel(HitResult, ObserverLocation, socketLocation, ECollisionChannel::ECC_Visibility, FCollisionQueryParams(NAME_AILineOfSight, true, IgnoreActor));
 		NumberOfLoSChecksPerformed++;
 
-		if (bHitSocket == false || (HitResult.Actor.IsValid() && HitResult.Actor->IsOwnedBy(this)))
+		if (bHitSocket == false || (IsValid(HitResult.GetActor()) && HitResult.GetActor()->IsOwnedBy(this)))
 		{
 			OutSeenLocation = socketLocation;
 			OutSightStrength = 1;
@@ -707,7 +709,7 @@ bool ACharacterBase::CanBeSeenFrom(const FVector& ObserverLocation, FVector& Out
 	const bool bHit = GetWorld()->LineTraceSingleByChannel(HitResult, ObserverLocation, GetActorLocation(), ECollisionChannel::ECC_Visibility, FCollisionQueryParams(NAME_AILineOfSight, true, IgnoreActor));
 	NumberOfLoSChecksPerformed++;
 
-	if (bHit == false || (HitResult.Actor.IsValid() && HitResult.Actor->IsOwnedBy(this)))
+	if (bHit == false || (IsValid(HitResult.GetActor()) && HitResult.GetActor()->IsOwnedBy(this)))
 	{
 		OutSeenLocation = GetActorLocation();
 		OutSightStrength = 1;
@@ -717,5 +719,48 @@ bool ACharacterBase::CanBeSeenFrom(const FVector& ObserverLocation, FVector& Out
 
 	OutSightStrength = 0;
 	return false;
+}
+*/
+
+UAISense_Sight::EVisibilityResult ACharacterBase::CanBeSeenFrom(const FCanBeSeenFromContext& Context, FVector& OutSeenLocation, int32& OutNumberOfLoSChecksPerformed, int32& OutNumberOfAsyncLosCheckRequested, float& OutSightStrength, int32* UserData, const FOnPendingVisibilityQueryProcessedDelegate* Delegate)
+{
+	static const FName NAME_AILineOfSight = FName(TEXT("TestPawnLineOfSight"));
+
+	FHitResult HitResult;
+
+	const AActor* IgnoreActor = Context.IgnoreActor;
+
+	auto Sockets = GetMesh()->GetAllSocketNames();
+
+	// Check if AI can detect character's bone.
+	for (int i = 0; i < Sockets.Num(); i++)
+	{
+		FVector SocketLocation = GetMesh()->GetSocketLocation(Sockets[i]);
+		const bool bHitSocket = GetWorld()->LineTraceSingleByChannel(HitResult, Context.ObserverLocation, SocketLocation, ECollisionChannel::ECC_Visibility, FCollisionQueryParams(NAME_AILineOfSight, true, IgnoreActor));
+		OutNumberOfLoSChecksPerformed++;
+
+		if (bHitSocket == false || (IsValid(HitResult.GetActor()) && HitResult.GetActor()->IsOwnedBy(this)))
+		{
+			OutSeenLocation = SocketLocation;
+			OutSightStrength = 1;
+
+			return UAISense_Sight::EVisibilityResult::Visible;
+		}
+	}
+
+	// Check if AI can detect character's root location.
+	const bool bHit = GetWorld()->LineTraceSingleByChannel(HitResult, Context.ObserverLocation, GetActorLocation(), ECollisionChannel::ECC_Visibility, FCollisionQueryParams(NAME_AILineOfSight, true, IgnoreActor));
+	OutNumberOfLoSChecksPerformed++;
+
+	if (bHit == false || (IsValid(HitResult.GetActor()) && HitResult.GetActor()->IsOwnedBy(this)))
+	{
+		OutSeenLocation = GetActorLocation();
+		OutSightStrength = 1;
+
+		return UAISense_Sight::EVisibilityResult::Visible;
+	}
+
+	OutSightStrength = 0;
+	return UAISense_Sight::EVisibilityResult::NotVisible;
 }
 
